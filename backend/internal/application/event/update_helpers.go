@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func buildUpdateEventParams(snapshot *EventEditSnapshot, input UpdateEventInput, now time.Time) (UpdateEventParams, []string, []string, map[string]string) {
@@ -286,8 +286,7 @@ func trimOptionalString(value *string) *string {
 	if value == nil {
 		return nil
 	}
-	trimmed := strings.TrimSpace(*value)
-	return &trimmed
+	return new(strings.TrimSpace(*value))
 }
 
 func stringPtrEqual(a, b *string) bool {
@@ -315,14 +314,12 @@ func copyIntPtr(value *int) *int {
 	if value == nil {
 		return nil
 	}
-	copied := *value
-	return &copied
+	return new(*value)
 }
 
 func copyTimePtr(value *time.Time) *time.Time {
 	if value == nil {
 		return nil
 	}
-	copied := *value
-	return &copied
+	return new(*value)
 }

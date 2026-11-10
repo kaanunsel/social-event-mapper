@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Service owns image-upload application behavior for profile avatars and event images.

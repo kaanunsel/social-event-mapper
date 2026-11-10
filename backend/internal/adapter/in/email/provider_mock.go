@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
-	emailapp "github.com/bounswe/bounswe2026group11/backend/internal/application/email"
+	emailapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/email"
 )
 
 // MockProvider logs transactional emails instead of delivering them.

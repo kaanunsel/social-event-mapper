@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func ptrString(s string) *string                                               { return &s }
@@ -16,7 +16,7 @@ func ptrGender(g domain.EventParticipantGender) *domain.EventParticipantGender {
 var referenceNow = time.Date(2026, 4, 18, 12, 0, 0, 0, time.UTC)
 
 func TestCheckParticipationEligibilityAllowsWhenNoRestrictions(t *testing.T) {
-	user := &domain.User{BirthDate: ptrTime(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))}
+	user := &domain.User{BirthDate: new(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))}
 	event := &domain.Event{}
 
 	if err := domain.CheckParticipationEligibility(user, event, referenceNow); err != nil {
@@ -25,8 +25,8 @@ func TestCheckParticipationEligibilityAllowsWhenNoRestrictions(t *testing.T) {
 }
 
 func TestCheckParticipationEligibilityRejectsUnderageUser(t *testing.T) {
-	user := &domain.User{BirthDate: ptrTime(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC))} // 11 yrs old at reference
-	event := &domain.Event{MinimumAge: ptrInt(18)}
+	user := &domain.User{BirthDate: new(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC))} // 11 yrs old at reference
+	event := &domain.Event{MinimumAge: new(18)}
 
 	err := domain.CheckParticipationEligibility(user, event, referenceNow)
 	if err == nil || err.Code != domain.ErrorCodeAgeRequirementNotMet {
@@ -39,7 +39,7 @@ func TestCheckParticipationEligibilityRejectsUnderageUser(t *testing.T) {
 
 func TestCheckParticipationEligibilityRequiresBirthDateWhenAgeRestricted(t *testing.T) {
 	user := &domain.User{BirthDate: nil}
-	event := &domain.Event{MinimumAge: ptrInt(18)}
+	event := &domain.Event{MinimumAge: new(18)}
 
 	err := domain.CheckParticipationEligibility(user, event, referenceNow)
 	if err == nil || err.Code != domain.ErrorCodeProfileIncomplete {
@@ -52,8 +52,8 @@ func TestCheckParticipationEligibilityRequiresBirthDateWhenAgeRestricted(t *test
 
 func TestCheckParticipationEligibilityAllowsAtExactMinimumAge(t *testing.T) {
 	// Born exactly 18 years before reference → eligible.
-	user := &domain.User{BirthDate: ptrTime(time.Date(2008, 4, 18, 0, 0, 0, 0, time.UTC))}
-	event := &domain.Event{MinimumAge: ptrInt(18)}
+	user := &domain.User{BirthDate: new(time.Date(2008, 4, 18, 0, 0, 0, 0, time.UTC))}
+	event := &domain.Event{MinimumAge: new(18)}
 
 	if err := domain.CheckParticipationEligibility(user, event, referenceNow); err != nil {
 		t.Fatalf("expected eligibility, got %v", err)
@@ -61,8 +61,8 @@ func TestCheckParticipationEligibilityAllowsAtExactMinimumAge(t *testing.T) {
 }
 
 func TestCheckParticipationEligibilityRejectsMismatchedGender(t *testing.T) {
-	user := &domain.User{Gender: ptrString(string(domain.GenderMale))}
-	event := &domain.Event{PreferredGender: ptrGender(domain.GenderFemale)}
+	user := &domain.User{Gender: new(string(domain.GenderMale))}
+	event := &domain.Event{PreferredGender: new(domain.GenderFemale)}
 
 	err := domain.CheckParticipationEligibility(user, event, referenceNow)
 	if err == nil || err.Code != domain.ErrorCodeGenderRequirementNotMet {
@@ -75,7 +75,7 @@ func TestCheckParticipationEligibilityRejectsMismatchedGender(t *testing.T) {
 
 func TestCheckParticipationEligibilityRequiresGenderWhenGenderRestricted(t *testing.T) {
 	user := &domain.User{Gender: nil}
-	event := &domain.Event{PreferredGender: ptrGender(domain.GenderFemale)}
+	event := &domain.Event{PreferredGender: new(domain.GenderFemale)}
 
 	err := domain.CheckParticipationEligibility(user, event, referenceNow)
 	if err == nil || err.Code != domain.ErrorCodeProfileIncomplete {
@@ -84,8 +84,8 @@ func TestCheckParticipationEligibilityRequiresGenderWhenGenderRestricted(t *test
 }
 
 func TestCheckParticipationEligibilityAllowsMatchingGender(t *testing.T) {
-	user := &domain.User{Gender: ptrString(string(domain.GenderFemale))}
-	event := &domain.Event{PreferredGender: ptrGender(domain.GenderFemale)}
+	user := &domain.User{Gender: new(string(domain.GenderFemale))}
+	event := &domain.Event{PreferredGender: new(domain.GenderFemale)}
 
 	if err := domain.CheckParticipationEligibility(user, event, referenceNow); err != nil {
 		t.Fatalf("expected eligibility, got %v", err)

@@ -48,16 +48,11 @@ Shared-only exceptions (e.g. a root `README` or repo-wide policy) should stay sm
 
 ## Before opening a PR
 
-1. **Target `dev`:** Open every PR against `dev`, not `main`.
+1. **Target `main`:** Open every PR against `main`.
 2. Code runs successfully locally.
 3. Commits and style match this doc.
-4. **Branch is up to date with `dev`** — sync before the PR (`git pull` or `git rebase` onto `dev`).
-
-## Deployment (shared dev server)
-
-Merges to **`main`** trigger CD that deploys to the **development droplet** (the remote stack described in [`docs/deploy.md`](./deploy.md)). That is independent of the **`dev` branch**, which is for integration PRs. Do not assume that pushing to `dev` updates the server; the path to the live dev environment is **`main`**.
+4. **Branch is up to date with `main`** — sync before the PR (`git pull` or `git rebase` onto `main`).
 
 ## Merge
 
-- Merge only after at least **one** approved review.
-- The team reviews each other’s work as part of normal development.
+- Merge only after CI passes and you have self-reviewed the diff (or had it reviewed, if collaborators join).

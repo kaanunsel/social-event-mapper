@@ -3,8 +3,8 @@ package httpapi
 import (
 	"strings"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // contextKeyUserClaims is the key used to store AuthClaims in the Fiber context.

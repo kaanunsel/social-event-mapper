@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -20,7 +20,7 @@ const (
 	defaultProximityMeters = 200.0
 )
 
-var tracer = otel.Tracer("github.com/bounswe/bounswe2026group11/backend/internal/application/ticket")
+var tracer = otel.Tracer("github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket")
 
 // Service owns ticket-specific application behavior.
 type Service struct {
@@ -522,14 +522,11 @@ func rejected(reason string) *ScanTicketResult {
 }
 
 func accepted(record TicketScanRecord, status domain.TicketStatus) *ScanTicketResult {
-	ticketID := record.Ticket.ID.String()
-	participationID := record.Participation.ID.String()
-	userID := record.UserID.String()
 	return &ScanTicketResult{
 		Result:          ScanResultAccepted,
-		TicketID:        &ticketID,
-		ParticipationID: &participationID,
-		UserID:          &userID,
+		TicketID:        new(record.Ticket.ID.String()),
+		ParticipationID: new(record.Participation.ID.String()),
+		UserID:          new(record.UserID.String()),
 		TicketStatus:    &status,
 	}
 }

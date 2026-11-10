@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	eventapp "github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	ratingapp "github.com/bounswe/bounswe2026group11/backend/internal/application/rating"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	eventapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	ratingapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/rating"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestEventRatingUpdatesHostScoreAndEventReadModels(t *testing.T) {

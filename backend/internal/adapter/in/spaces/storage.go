@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
 )
 
 // Config contains the secrets and endpoint settings required to talk to Spaces.
@@ -120,13 +120,11 @@ func (s *Storage) ObjectExists(ctx context.Context, key string) (bool, error) {
 }
 
 func isNotFound(err error) bool {
-	var responseErr *smithyhttp.ResponseError
-	if errors.As(err, &responseErr) && responseErr.HTTPStatusCode() == http.StatusNotFound {
+	if responseErr, ok := errors.AsType[*smithyhttp.ResponseError](err); ok && responseErr.HTTPStatusCode() == http.StatusNotFound {
 		return true
 	}
 
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		code := apiErr.ErrorCode()
 		return code == "NotFound" || code == "NoSuchKey"
 	}

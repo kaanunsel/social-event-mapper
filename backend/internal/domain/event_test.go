@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // haversineMeters returns the great-circle distance in metres between two points.

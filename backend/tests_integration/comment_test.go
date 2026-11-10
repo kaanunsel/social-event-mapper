@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	commentapp "github.com/bounswe/bounswe2026group11/backend/internal/application/comment"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	commentapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/comment"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestPublicEventCommentsListTopLevelAndRepliesSeparately(t *testing.T) {

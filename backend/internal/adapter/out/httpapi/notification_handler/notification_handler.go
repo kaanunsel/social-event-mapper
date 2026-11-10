@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Handler groups HTTP handlers that delegate to the notification use case.
@@ -305,8 +305,7 @@ func toListNotificationsResponse(result *notificationapp.ListNotificationsResult
 func toNotificationResponse(notification domain.Notification) notificationResponse {
 	var eventID *string
 	if notification.EventID != nil {
-		value := notification.EventID.String()
-		eventID = &value
+		eventID = new(notification.EventID.String())
 	}
 	data := notification.Data
 	if data == nil {

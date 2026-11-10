@@ -4,10 +4,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // scanUser reads a User from a single pgx.Row, handling nullable columns

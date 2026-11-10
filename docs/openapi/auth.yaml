@@ -17,8 +17,8 @@ info:
       original login or registration session start.
     - After a successful refresh, the previous refresh token must be discarded by the client.
 
-    OTP delivery uses the backend's configured transactional mail provider. Local and
-    dev defaults use Resend with single-recipient sends.
+    OTP delivery uses the backend's configured transactional mail provider. Local
+    defaults use a mock provider that logs emails; Resend can be enabled through configuration.
 
     The `access_token` returned by successful sign-in and refresh responses is the same
     bearer token used by protected APIs such as the Event API under the `/api` server.

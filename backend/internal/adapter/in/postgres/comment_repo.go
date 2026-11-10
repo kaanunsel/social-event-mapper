@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	commentapp "github.com/bounswe/bounswe2026group11/backend/internal/application/comment"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	commentapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/comment"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // CommentRepository is the Postgres-backed implementation of comment.Repository.
@@ -374,8 +374,7 @@ func scanCommentRecord(row pgx.Row, operation string) (*commentapp.CommentRecord
 	record.Type = domain.CommentType(commentType)
 	record.ParentID = uuidPtr(parentID)
 	if rating.Valid {
-		value := int(rating.Int32)
-		record.Rating = &value
+		record.Rating = new(int(rating.Int32))
 	}
 	record.ImageURL = textPtr(imageURL)
 	record.User.DisplayName = textPtr(displayName)

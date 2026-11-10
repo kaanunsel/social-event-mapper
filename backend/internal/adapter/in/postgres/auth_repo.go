@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	authapp "github.com/bounswe/bounswe2026group11/backend/internal/application/auth"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	authapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/auth"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // AuthRepository is the Postgres-backed implementation of auth.Repository.

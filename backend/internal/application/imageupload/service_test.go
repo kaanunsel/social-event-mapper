@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeProfileRepo struct {
@@ -196,8 +196,7 @@ func (m *fakeTokenManager) Sign(payload ConfirmTokenPayload, _ time.Duration) (s
 	if m.signErr != nil {
 		return "", m.signErr
 	}
-	copyPayload := payload
-	m.payload = &copyPayload
+	m.payload = new(payload)
 	return "confirm-token", nil
 }
 
@@ -208,8 +207,7 @@ func (m *fakeTokenManager) Verify(_ string) (*ConfirmTokenPayload, error) {
 	if m.payload == nil {
 		return nil, errors.New("missing payload")
 	}
-	copyPayload := *m.payload
-	return &copyPayload, nil
+	return new(*m.payload), nil
 }
 
 func newServiceForTests() (*Service, *fakeProfileRepo, *fakeEventRepo, *fakeStorage, *fakeTokenManager) {

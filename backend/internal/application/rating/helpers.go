@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func normalizeMessage(message *string) *string {
@@ -74,8 +74,7 @@ func calculateBayesianAverage(average *float64, count int, settings Settings) *f
 	}
 
 	m := float64(settings.BayesianM)
-	score := ((*average * float64(count)) + (settings.GlobalPrior * m)) / (float64(count) + m)
-	return &score
+	return new(((*average * float64(count)) + (settings.GlobalPrior * m)) / (float64(count) + m))
 }
 
 func calculateFinalScore(participantAggregate, hostedAggregate *ScoreAggregate, settings Settings) *float64 {
@@ -92,7 +91,6 @@ func calculateFinalScore(participantAggregate, hostedAggregate *ScoreAggregate, 
 	case hostedBayesian == nil:
 		return participantBayesian
 	default:
-		score := (0.6 * *hostedBayesian) + (0.4 * *participantBayesian)
-		return &score
+		return new((0.6 * *hostedBayesian) + (0.4 * *participantBayesian))
 	}
 }

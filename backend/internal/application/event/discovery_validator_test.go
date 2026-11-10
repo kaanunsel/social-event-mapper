@@ -8,9 +8,7 @@ import (
 )
 
 func baseDiscoverInput() DiscoverEventsInput {
-	lat := 41.0
-	lon := 29.0
-	return DiscoverEventsInput{Lat: &lat, Lon: &lon}
+	return DiscoverEventsInput{Lat: new(41.0), Lon: new(29.0)}
 }
 
 func TestNormalizeDiscoverEventsInput_ChildFriendlyTrue(t *testing.T) {

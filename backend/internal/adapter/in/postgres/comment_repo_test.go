@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	commentapp "github.com/bounswe/bounswe2026group11/backend/internal/application/comment"
 	"github.com/google/uuid"
+	commentapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/comment"
 )
 
 func TestBuildCommentCursorClauseUsesComparator(t *testing.T) {

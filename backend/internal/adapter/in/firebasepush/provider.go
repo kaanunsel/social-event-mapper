@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
 )
 
 const (

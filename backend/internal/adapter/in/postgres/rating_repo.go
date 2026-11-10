@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	ratingapp "github.com/bounswe/bounswe2026group11/backend/internal/application/rating"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	ratingapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/rating"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // RatingRepository is the Postgres-backed implementation of rating.Repository.

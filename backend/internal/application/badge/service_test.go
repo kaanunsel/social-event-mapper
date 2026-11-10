@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeRepo struct {
@@ -270,10 +270,9 @@ func TestEvaluateParticipationBadgesIdempotent(t *testing.T) {
 func TestEvaluateHostBadgesRequiresMinRatingsForTopRated(t *testing.T) {
 	repo := newFakeRepo()
 	hostID := uuid.New()
-	score := 4.9
 	repo.host[hostID] = HostStatsRecord{
 		CompletedHostedEventCount: 10,
-		HostScore:                 &score,
+		HostScore:                 new(4.9),
 		HostRatingCount:           4, // below minTopRatedRatingCount (5)
 	}
 	svc := NewService(repo)
@@ -294,10 +293,9 @@ func TestEvaluateHostBadgesRequiresMinRatingsForTopRated(t *testing.T) {
 func TestEvaluateHostBadgesAwardsTopRated(t *testing.T) {
 	repo := newFakeRepo()
 	hostID := uuid.New()
-	score := 4.6
 	repo.host[hostID] = HostStatsRecord{
 		CompletedHostedEventCount: 10,
-		HostScore:                 &score,
+		HostScore:                 new(4.6),
 		HostRatingCount:           5,
 	}
 	svc := NewService(repo)
@@ -319,10 +317,9 @@ func TestEvaluateHostBadgesAwardsTopRated(t *testing.T) {
 func TestEvaluateHostBadgesScoreBelowThreshold(t *testing.T) {
 	repo := newFakeRepo()
 	hostID := uuid.New()
-	score := 4.4
 	repo.host[hostID] = HostStatsRecord{
 		CompletedHostedEventCount: 1,
-		HostScore:                 &score,
+		HostScore:                 new(4.4),
 		HostRatingCount:           10,
 	}
 	svc := NewService(repo)
@@ -383,7 +380,6 @@ func TestBackfillExistingBadgesEvaluatesHistoricalCandidates(t *testing.T) {
 	participantID := uuid.New()
 	hostID := uuid.New()
 	favoriteID := uuid.New()
-	score := 4.8
 	repo.participationIDs = []uuid.UUID{participantID}
 	repo.hostIDs = []uuid.UUID{hostID}
 	repo.favoriteIDs = []uuid.UUID{favoriteID}
@@ -393,7 +389,7 @@ func TestBackfillExistingBadgesEvaluatesHistoricalCandidates(t *testing.T) {
 	}
 	repo.host[hostID] = HostStatsRecord{
 		CompletedHostedEventCount: 10,
-		HostScore:                 &score,
+		HostScore:                 new(4.8),
 		HostRatingCount:           5,
 	}
 	repo.favoriteCounts[favoriteID] = 3

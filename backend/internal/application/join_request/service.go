@@ -8,17 +8,17 @@ import (
 	"strings"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
 
-var tracer = otel.Tracer("github.com/bounswe/bounswe2026group11/backend/internal/application/join_request")
+var tracer = otel.Tracer("github.com/kaanunsel/social-event-mapper/backend/internal/application/join_request")
 
 // Service owns join-request-specific application behavior.
 type Service struct {
@@ -249,7 +249,6 @@ func (s *Service) notifyModeratedJoinRequest(ctx context.Context, joinRequestID 
 		idempotencyKey = fmt.Sprintf("JOIN_REQUEST_REJECTED:%s", notificationCtx.JoinRequestID.String())
 	}
 
-	deepLink := fmt.Sprintf("/events/%s", notificationCtx.EventID.String())
 	data := joinRequestNotificationData(notificationCtx, status)
 	if cooldownEndsAt != nil {
 		data["cooldown_ends_at"] = cooldownEndsAt.UTC().Format(time.RFC3339)
@@ -262,7 +261,7 @@ func (s *Service) notifyModeratedJoinRequest(ctx context.Context, joinRequestID 
 		Body:           body,
 		BodyKey:        bodyKey,
 		BodyArgs:       []any{hostLabel, notificationCtx.EventTitle},
-		DeepLink:       &deepLink,
+		DeepLink:       new(fmt.Sprintf("/events/%s", notificationCtx.EventID.String())),
 		EventID:        &notificationCtx.EventID,
 		ImageURL:       notificationCtx.EventImageURL,
 		Data:           data,

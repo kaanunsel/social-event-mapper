@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct{}
@@ -192,13 +192,10 @@ func TestListReceivedInvitationsBucketsAndPagination(t *testing.T) {
 		repo := &fakeRepo{
 			past: []ReceivedInvitationRecord{pastRec1, pastRec2},
 		}
-		service := NewService(repo, fakeUnitOfWork{})
-		limit := 1
-
-		// when
+		service := NewService(repo, fakeUnitOfWork{}) // when
 		result, err := service.ListReceivedInvitations(context.Background(), ListReceivedInvitationsInput{
 			UserID:    uuid.New(),
-			PastLimit: &limit,
+			PastLimit: new(1),
 		})
 
 		// then
@@ -228,13 +225,10 @@ func TestListReceivedInvitationsBucketsAndPagination(t *testing.T) {
 	t.Run("invalid cursor returns validation_error", func(t *testing.T) {
 		// given
 		repo := &fakeRepo{}
-		service := NewService(repo, fakeUnitOfWork{})
-		bad := "!!!not-a-cursor!!!"
-
-		// when
+		service := NewService(repo, fakeUnitOfWork{}) // when
 		_, err := service.ListReceivedInvitations(context.Background(), ListReceivedInvitationsInput{
 			UserID:     uuid.New(),
-			PastCursor: &bad,
+			PastCursor: new("!!!not-a-cursor!!!"),
 		})
 
 		// then
@@ -297,13 +291,10 @@ func TestListReceivedInvitationsBucketsAndPagination(t *testing.T) {
 		repo := &fakeRepo{
 			past: []ReceivedInvitationRecord{pastRec1},
 		}
-		service := NewService(repo, fakeUnitOfWork{})
-		emptyCursor := "   "
-
-		// when
+		service := NewService(repo, fakeUnitOfWork{}) // when
 		result, err := service.ListReceivedInvitations(context.Background(), ListReceivedInvitationsInput{
 			UserID:     uuid.New(),
-			PastCursor: &emptyCursor,
+			PastCursor: new("   "),
 		})
 
 		// then
@@ -418,8 +409,7 @@ func TestGetReceivedInvitation(t *testing.T) {
 		}
 		// Must NOT be an *AppError — that would silently downgrade to 404/500
 		// and lose the wrap chain for upstream observability.
-		var appErr *domain.AppError
-		if errors.As(err, &appErr) {
+		if appErr, ok := errors.AsType[*domain.AppError](err); ok {
 			t.Errorf("expected raw error, got *domain.AppError = %v", appErr)
 		}
 	})
@@ -461,8 +451,7 @@ func TestRevokeInvitationPropagatesRepoError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	var appErr *domain.AppError
-	if !errors.As(err, &appErr) || appErr.Code != domain.ErrorCodeInvitationStateInvalid {
+	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Code != domain.ErrorCodeInvitationStateInvalid {
 		t.Fatalf("expected invitation_state_invalid error, got %v", err)
 	}
 }
@@ -556,7 +545,6 @@ func TestAcceptInvitationNotifiesHostWithoutFailingAction(t *testing.T) {
 	invitedID := uuid.New()
 	invitationID := uuid.New()
 	participationID := uuid.New()
-	imageURL := "https://cdn.example.com/event.jpg"
 	now := time.Now().UTC()
 	repo := &fakeRepo{
 		acceptResult: &AcceptInvitationRecord{
@@ -568,7 +556,7 @@ func TestAcceptInvitationNotifiesHostWithoutFailingAction(t *testing.T) {
 				InvitationID:    invitationID,
 				EventID:         eventID,
 				EventTitle:      "Trail Run",
-				EventImageURL:   &imageURL,
+				EventImageURL:   new("https://cdn.example.com/event.jpg"),
 				EventStartTime:  now,
 				HostUserID:      hostID,
 				HostUsername:    "host",

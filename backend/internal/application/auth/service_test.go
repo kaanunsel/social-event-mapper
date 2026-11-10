@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct {
@@ -442,7 +442,7 @@ func TestVerifyRegistrationOTPSuccessCreatesUserAndSession(t *testing.T) {
 		PhoneNumber: &phoneNumber,
 		Gender:      &gender,
 		BirthDate:   &birthDate,
-		DeviceInfo:  stringPtr("tests"),
+		DeviceInfo:  new("tests"),
 	})
 	if err != nil {
 		t.Fatalf("VerifyRegistrationOTP() error = %v", err)
@@ -497,7 +497,7 @@ func TestVerifyRegistrationOTPRejectsInvalidBirthDate(t *testing.T) {
 		OTP:       mailer.lastCode,
 		Username:  "new_user",
 		Password:  "super-secret-password",
-		BirthDate: stringPtr("14-05-1998"),
+		BirthDate: new("14-05-1998"),
 	})
 
 	// then
@@ -640,7 +640,7 @@ func TestRefreshRotatesTokenAndRejectsReuse(t *testing.T) {
 	}
 
 	// when
-	refreshed, err := svc.Refresh(context.Background(), session.RefreshToken, stringPtr("device"))
+	refreshed, err := svc.Refresh(context.Background(), session.RefreshToken, new("device"))
 	if err != nil {
 		t.Fatalf("Refresh() error = %v", err)
 	}
@@ -660,7 +660,7 @@ func TestRefreshRotatesTokenAndRejectsReuse(t *testing.T) {
 	}
 
 	// when
-	_, err = svc.Refresh(context.Background(), session.RefreshToken, stringPtr("device"))
+	_, err = svc.Refresh(context.Background(), session.RefreshToken, new("device"))
 
 	// then
 	assertAppErrorCode(t, err, domain.ErrorCodeRefreshReused)
@@ -1019,7 +1019,7 @@ func (r *fakeRepo) CreateUser(_ context.Context, params CreateUserParams) (*doma
 		Gender:          params.Gender,
 		BirthDate:       params.BirthDate,
 		PasswordHash:    params.PasswordHash,
-		EmailVerifiedAt: timePtr(params.EmailVerifiedAt),
+		EmailVerifiedAt: new(params.EmailVerifiedAt),
 		Status:          params.Status,
 		CreatedAt:       params.EmailVerifiedAt,
 		UpdatedAt:       params.EmailVerifiedAt,
@@ -1053,7 +1053,7 @@ func (r *fakeRepo) UpdateLastLogin(_ context.Context, userID uuid.UUID, lastLogi
 	if !ok {
 		return domain.ErrNotFound
 	}
-	user.LastLogin = timePtr(lastLogin)
+	user.LastLogin = new(lastLogin)
 	return nil
 }
 
@@ -1107,7 +1107,7 @@ func (r *fakeRepo) IncrementOTPChallengeAttempts(_ context.Context, challengeID 
 func (r *fakeRepo) ConsumeOTPChallenge(_ context.Context, challengeID uuid.UUID, consumedAt time.Time) error {
 	for _, challenge := range r.challenges {
 		if challenge.ID == challengeID {
-			challenge.ConsumedAt = timePtr(consumedAt)
+			challenge.ConsumedAt = new(consumedAt)
 			challenge.UpdatedAt = consumedAt
 			return nil
 		}
@@ -1161,7 +1161,7 @@ func (r *fakeRepo) RevokeRefreshToken(_ context.Context, tokenID uuid.UUID, revo
 	if !ok {
 		return domain.ErrNotFound
 	}
-	record.RevokedAt = timePtr(revokedAt)
+	record.RevokedAt = new(revokedAt)
 	record.UpdatedAt = revokedAt
 	return nil
 }
@@ -1171,7 +1171,7 @@ func (r *fakeRepo) SetRefreshTokenReplacement(_ context.Context, tokenID, replac
 	if !ok {
 		return domain.ErrNotFound
 	}
-	record.ReplacedByID = uuidPtr(replacedByID)
+	record.ReplacedByID = new(replacedByID)
 	record.UpdatedAt = updatedAt
 	return nil
 }
@@ -1180,7 +1180,7 @@ func (r *fakeRepo) RevokeRefreshTokenFamily(_ context.Context, familyID uuid.UUI
 	for _, tokenID := range r.refreshByFamily[familyID] {
 		record := r.refreshByID[tokenID]
 		if record.RevokedAt == nil {
-			record.RevokedAt = timePtr(revokedAt)
+			record.RevokedAt = new(revokedAt)
 			record.UpdatedAt = revokedAt
 		}
 	}

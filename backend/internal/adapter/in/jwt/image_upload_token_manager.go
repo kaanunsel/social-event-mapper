@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
 )
 
 const imageUploadTokenSubject = "IMAGE_UPLOAD_CONFIRM" // #nosec G101 -- JWT subject constant, not a credential.

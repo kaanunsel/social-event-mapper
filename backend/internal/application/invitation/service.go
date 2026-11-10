@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 const maxBatchInviteUsernames = 100
@@ -136,8 +136,7 @@ func (s *Service) GetReceivedInvitation(ctx context.Context, userID, invitationI
 		}
 		return nil, fmt.Errorf("get received invitation: %w", err)
 	}
-	dto := toReceivedInvitation(*record)
-	return &dto, nil
+	return new(toReceivedInvitation(*record)), nil
 }
 
 // normalizeListReceivedInvitationsInput resolves the past-bucket page size
@@ -347,7 +346,6 @@ func (s *Service) notifyInvitationResponse(ctx context.Context, invitationID uui
 		body = fmt.Sprintf("%s declined your invitation to %s.", invitedLabel, notificationCtx.EventTitle)
 	}
 
-	deepLink := fmt.Sprintf("/events/%s", notificationCtx.EventID.String())
 	_, err = s.notifications.SendNotificationToUsers(ctx, notificationapp.SendNotificationInput{
 		UserIDs:  []uuid.UUID{notificationCtx.HostUserID},
 		Title:    title,
@@ -356,7 +354,7 @@ func (s *Service) notifyInvitationResponse(ctx context.Context, invitationID uui
 		Body:     body,
 		BodyKey:  bodyKey,
 		BodyArgs: []any{invitedLabel, notificationCtx.EventTitle},
-		DeepLink: &deepLink,
+		DeepLink: new(fmt.Sprintf("/events/%s", notificationCtx.EventID.String())),
 		EventID:  &notificationCtx.EventID,
 		ImageURL: notificationCtx.EventImageURL,
 		Data: invitationNotificationData(notificationCtx, map[string]string{
@@ -383,18 +381,16 @@ func (s *Service) sendInvitationReceivedNotification(ctx context.Context, notifi
 	if notificationCtx == nil {
 		return
 	}
-	notificationType := "PRIVATE_EVENT_INVITATION_RECEIVED"
-	deepLink := fmt.Sprintf("/events/%s", notificationCtx.EventID.String())
 	hostLabel := displayLabel(notificationCtx.HostDisplayName, notificationCtx.HostUsername)
 	_, err := s.notifications.SendNotificationToUsers(ctx, notificationapp.SendNotificationInput{
 		UserIDs:  []uuid.UUID{notificationCtx.InvitedUserID},
 		Title:    "Private event invitation",
 		TitleKey: "notification.invitation.received.title",
-		Type:     &notificationType,
+		Type:     new("PRIVATE_EVENT_INVITATION_RECEIVED"),
 		Body:     fmt.Sprintf("%s invited you to %s.", hostLabel, notificationCtx.EventTitle),
 		BodyKey:  "notification.invitation.received.body",
 		BodyArgs: []any{hostLabel, notificationCtx.EventTitle},
-		DeepLink: &deepLink,
+		DeepLink: new(fmt.Sprintf("/events/%s", notificationCtx.EventID.String())),
 		EventID:  &notificationCtx.EventID,
 		ImageURL: notificationCtx.EventImageURL,
 		Data: invitationNotificationData(notificationCtx, map[string]string{

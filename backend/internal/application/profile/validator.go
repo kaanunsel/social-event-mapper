@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n"
 )
 
 func validateChangePasswordInput(input ChangePasswordInput) *domain.AppError {
@@ -142,8 +142,7 @@ func validateUpdateProfileInput(input UpdateProfileInput) (*UpdateProfileInput, 
 		if trimmed == "" {
 			out.Locale = nil
 		} else if loc, ok := i18n.Parse(trimmed); ok {
-			normalized := string(loc)
-			out.Locale = &normalized
+			out.Locale = new(string(loc))
 		} else {
 			detailKeys["locale"] = "validation.locale.unsupported"
 		}

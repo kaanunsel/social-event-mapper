@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // CategoryRepository is the Postgres-backed implementation of category.Repository.

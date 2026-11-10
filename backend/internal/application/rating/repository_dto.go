@@ -3,8 +3,8 @@ package rating
 import (
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // UpsertRatingInput carries the write payload used by both rating resources.

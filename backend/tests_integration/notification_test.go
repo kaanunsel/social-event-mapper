@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestNotificationRegisterDevicePersistsAndEnforcesDeviceLimit(t *testing.T) {

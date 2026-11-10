@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/invitation"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/invitation"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func ptrParticipationStatus(status domain.ParticipationStatus) *domain.ParticipationStatus {
@@ -753,8 +753,6 @@ func TestGetEventDetailReturns200(t *testing.T) {
 
 func TestGetEventDetailReturnsRatingMetadata(t *testing.T) {
 	// given
-	finalScore := 4.2
-	message := "Great event."
 	svc := &stubEventService{
 		detailResult: &event.GetEventDetailResult{
 			ID:           uuid.NewString(),
@@ -768,7 +766,7 @@ func TestGetEventDetailReturnsRatingMetadata(t *testing.T) {
 			},
 			HostScore: event.EventHostScoreSummary{
 				HostedEventRatingCount: 9,
-				FinalScore:             &finalScore,
+				FinalScore:             new(4.2),
 			},
 			Location: event.EventDetailLocation{
 				Type: string(domain.LocationPoint),
@@ -787,14 +785,14 @@ func TestGetEventDetailReturnsRatingMetadata(t *testing.T) {
 			ViewerEventRating: &event.EventDetailRating{
 				ID:        uuid.NewString(),
 				Rating:    5,
-				Message:   &message,
+				Message:   new("Great event."),
 				CreatedAt: time.Now().UTC().Add(-30 * time.Minute),
 				UpdatedAt: time.Now().UTC(),
 			},
 			ViewerContext: event.EventDetailViewerContext{
 				IsHost:              false,
 				IsFavorited:         false,
-				ParticipationStatus: ptrParticipationStatus(domain.ParticipationStatusApproved),
+				ParticipationStatus: new(domain.ParticipationStatusApproved),
 				LatestEventVersion:  1,
 			},
 		},

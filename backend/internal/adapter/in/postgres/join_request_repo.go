@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	joinrequestapp "github.com/bounswe/bounswe2026group11/backend/internal/application/join_request"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	joinrequestapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/join_request"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // JoinRequestRepository is the Postgres-backed implementation of join_request.Repository.
@@ -309,8 +309,7 @@ func (r *JoinRequestRepository) loadEventState(ctx context.Context, eventID uuid
 		VersionNo:                versionNo,
 	}
 	if capacity.Valid {
-		value := int(capacity.Int32)
-		event.Capacity = &value
+		event.Capacity = new(int(capacity.Int32))
 	}
 
 	return event, nil
@@ -525,8 +524,7 @@ func scanJoinRequest(row pgx.Row) (*domain.JoinRequest, error) {
 		UpdatedAt:  updatedAt,
 	}
 	if participationID.Valid {
-		parsedParticipationID := uuid.UUID(participationID.Bytes)
-		request.ParticipationID = &parsedParticipationID
+		request.ParticipationID = new(uuid.UUID(participationID.Bytes))
 	}
 	if message.Valid {
 		request.Message = &message.String

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n"
 )
 
 func loadTestCatalog(t *testing.T) *i18n.Catalog {

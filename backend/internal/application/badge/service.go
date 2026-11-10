@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 const (
@@ -74,8 +74,7 @@ func (s *Service) ListBadges(ctx context.Context, userID uuid.UUID) (*ListBadges
 		entry := CatalogBadgeItem{BadgeItem: toBadgeItem(b)}
 		if t, ok := earnedAt[b.Slug]; ok {
 			entry.Earned = true
-			formatted := t.Format(time.RFC3339)
-			entry.EarnedAt = &formatted
+			entry.EarnedAt = new(t.Format(time.RFC3339))
 		}
 		items[i] = entry
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Validation patterns for usernames (alphanumeric + underscore) and OTP codes (6 digits).

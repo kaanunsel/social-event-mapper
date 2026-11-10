@@ -6,9 +6,9 @@ import (
 	"context"
 	"testing"
 
-	postgresrepo "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/postgres"
-	categoryapp "github.com/bounswe/bounswe2026group11/backend/internal/application/category"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
+	postgresrepo "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/postgres"
+	categoryapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/category"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestListCategoriesReturnsSeedData(t *testing.T) {

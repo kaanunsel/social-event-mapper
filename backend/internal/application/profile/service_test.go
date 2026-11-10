@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // --- fakes ---
@@ -401,13 +401,11 @@ func TestCreateMyEquipmentNormalizesOptionalFields(t *testing.T) {
 	repo := &fakeProfileRepo{}
 	svc := newService(repo)
 
-	description := "  lightweight  "
-	imageURL := "   "
 	item, err := svc.CreateMyEquipment(context.Background(), CreateEquipmentInput{
 		UserID:      uuid.New(),
 		Name:        "  Trail Shoes ",
-		Description: &description,
-		ImageURL:    &imageURL,
+		Description: new("  lightweight  "),
+		ImageURL:    new("   "),
 	})
 	if err != nil {
 		t.Fatalf("CreateMyEquipment() error = %v", err)
@@ -435,11 +433,10 @@ func TestUpdateMyEquipmentRejectsForeignOwner(t *testing.T) {
 	}
 	svc := newService(repo)
 
-	name := "New Tent"
 	_, err := svc.UpdateMyEquipment(context.Background(), UpdateEquipmentInput{
 		UserID:      callerID,
 		EquipmentID: repo.equipmentRecord.ID,
-		Name:        &name,
+		Name:        new("New Tent"),
 	})
 	if err == nil {
 		t.Fatal("expected error, got nil")

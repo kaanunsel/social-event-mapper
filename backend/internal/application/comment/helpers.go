@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 const (
@@ -38,8 +38,7 @@ func normalizeLimit(value *int) (int, map[string]string) {
 func toCommentResult(record CommentRecord) CommentResult {
 	var parentID *string
 	if record.ParentID != nil {
-		value := record.ParentID.String()
-		parentID = &value
+		parentID = new(record.ParentID.String())
 	}
 
 	return CommentResult{

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeCommentRepo struct {
@@ -176,14 +176,11 @@ func TestUpsertReviewCommentStoresConfirmedImageAndRefreshesHostScore(t *testing
 	scoreUpdater := &fakeScoreUpdater{}
 	service := NewService(repo, &fakeCommentUOW{})
 	service.SetReviewImageConfirmer(fakeReviewImageConfirmer{baseURL: "https://cdn.example/review.jpg"})
-	service.SetReviewScoreUpdater(scoreUpdater)
-	token := "confirm-token"
-
-	// when
+	service.SetReviewScoreUpdater(scoreUpdater) // when
 	_, err := service.UpsertReviewComment(context.Background(), userID, eventID, UpsertReviewCommentInput{
 		Message:           "great event",
 		Rating:            5,
-		ImageConfirmToken: &token,
+		ImageConfirmToken: new("confirm-token"),
 	})
 
 	// then

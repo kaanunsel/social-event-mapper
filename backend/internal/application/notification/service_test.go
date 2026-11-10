@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func TestRegisterDeviceUpsertsTokenAndEnforcesTwoDeviceLimit(t *testing.T) {
@@ -363,8 +363,7 @@ func (r *fakeNotificationRepo) LockUser(_ context.Context, userID uuid.UUID) err
 func (r *fakeNotificationRepo) UpsertDevice(_ context.Context, params RegisterDeviceParams) (*domain.PushDevice, error) {
 	for _, device := range r.devices {
 		if device.FCMToken == params.FCMToken && device.RevokedAt == nil && (device.UserID != params.UserID || device.InstallationID != params.InstallationID) {
-			now := params.LastSeenAt
-			device.RevokedAt = &now
+			device.RevokedAt = new(params.LastSeenAt)
 		}
 	}
 	for _, device := range r.devices {

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n"
 )
 
 // TestSendNotificationTranslatesPerRecipient asserts that two recipients

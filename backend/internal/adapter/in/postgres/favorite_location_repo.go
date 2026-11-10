@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	favoritelocationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/favorite_location"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	favoritelocationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/favorite_location"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // FavoriteLocationRepository is the Postgres-backed implementation of favorite_location.Repository.

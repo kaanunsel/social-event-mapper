@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	authapp "github.com/bounswe/bounswe2026group11/backend/internal/application/auth"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	authapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/auth"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestAuthCheckAvailabilityReturnsTakenForPersistedIdentity(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n/locales"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n/locales"
 )
 
 // TestEmbeddedCatalogLoads guarantees the embedded JSON files parse and

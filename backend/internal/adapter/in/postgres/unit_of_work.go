@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
 )
 
 type txStarter interface {

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct{}
@@ -517,8 +517,7 @@ func TestCancelJoinRequestPropagatesRepoError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	var appErr *domain.AppError
-	if !errors.As(err, &appErr) || appErr.Code != domain.ErrorCodeJoinRequestStateInvalid {
+	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Code != domain.ErrorCodeJoinRequestStateInvalid {
 		t.Fatalf("expected join_request_state_invalid error, got %v", err)
 	}
 }

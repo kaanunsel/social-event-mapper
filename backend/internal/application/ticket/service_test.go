@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct {
@@ -181,8 +181,7 @@ func TestIssueQRTokenRejectsFarLocation(t *testing.T) {
 	_, err := service.IssueQRToken(context.Background(), record.UserID, record.Ticket.ID, QRTokenInput{})
 
 	// then
-	var appErr *domain.AppError
-	if !errors.As(err, &appErr) || appErr.Code != domain.ErrorCodeTicketProximityRequired {
+	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Code != domain.ErrorCodeTicketProximityRequired {
 		t.Fatalf("expected proximity error, got %T %v", err, err)
 	}
 }
@@ -313,8 +312,7 @@ func activeTicketAccessRecord(now time.Time) *TicketAccessRecord {
 
 func activeTicketScanRecord(now time.Time) *TicketScanRecord {
 	access := activeTicketAccessRecord(now)
-	hash := "hash:signed-token"
-	access.Ticket.LastIssuedQRTokenHash = &hash
+	access.Ticket.LastIssuedQRTokenHash = new("hash:signed-token")
 	return &TicketScanRecord{
 		Ticket:        access.Ticket,
 		Participation: access.Participation,

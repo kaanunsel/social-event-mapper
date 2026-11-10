@@ -23,6 +23,6 @@ docs/postman/.venv/
 # Optional Compose merge next to deploy/docker-compose.local.yml (e.g. expose Postgres on localhost)
 deploy/docker-compose.override.yml
 
-# TLS files for nginx on the droplet (see nginx/nginx.dev.conf, docs/deploy.md)
+# TLS certificates and keys (never commit)
 /certs/*.pem
 /certs/*.key

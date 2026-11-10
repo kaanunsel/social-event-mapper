@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeTicketService struct {
@@ -67,8 +67,7 @@ func (s *fakeTicketService) ScanTicket(_ context.Context, hostUserID, eventID uu
 	s.scanInput = input
 	s.scanHostUserID = hostUserID
 	s.scanEventID = eventID
-	status := domain.TicketStatusUsed
-	return &ticket.ScanTicketResult{Result: ticket.ScanResultAccepted, TicketStatus: &status}, nil
+	return &ticket.ScanTicketResult{Result: ticket.ScanResultAccepted, TicketStatus: new(domain.TicketStatusUsed)}, nil
 }
 
 type fakeVerifier struct {

@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"sync/atomic"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n"
 )
 
 // ErrorEnvelope wraps all error responses in a consistent JSON structure: {"error": {...}}.

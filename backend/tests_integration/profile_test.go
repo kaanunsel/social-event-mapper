@@ -6,12 +6,12 @@ import (
 	"context"
 	"testing"
 
-	postgresrepo "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/postgres"
-	imageuploadapp "github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	profileapp "github.com/bounswe/bounswe2026group11/backend/internal/application/profile"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	postgresrepo "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/postgres"
+	imageuploadapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	profileapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/profile"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestGetPublicProfileReturnsPublicSafeProfile(t *testing.T) {

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/internal/i18n"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/i18n"
 )
 
 // Service owns push-device registration and push notification delivery.
@@ -227,13 +227,12 @@ func (s *Service) SendNotificationToUsers(ctx context.Context, input SendNotific
 		if delivered > 0 {
 			result.SSEDeliveryCount += delivered
 			for i := 0; i < delivered; i++ {
-				sentAt := now
 				if err := s.repo.CreateDeliveryAttempt(ctx, CreateDeliveryAttemptParams{
 					NotificationID: createResult.Notification.ID,
 					UserID:         userID,
 					Method:         domain.NotificationDeliveryMethodSSE,
 					Status:         domain.NotificationDeliveryStatusSent,
-					SentAt:         &sentAt,
+					SentAt:         new(now),
 				}); err != nil {
 					return nil, fmt.Errorf("store sse delivery attempt: %w", err)
 				}
@@ -309,13 +308,12 @@ func (s *Service) SendCustomNotificationToUsers(ctx context.Context, input SendC
 			if delivered > 0 {
 				result.SSEDeliveryCount += delivered
 				for i := 0; i < delivered; i++ {
-					sentAt := now
 					if err := s.repo.CreateDeliveryAttempt(ctx, CreateDeliveryAttemptParams{
 						NotificationID: createResult.Notification.ID,
 						UserID:         userID,
 						Method:         domain.NotificationDeliveryMethodSSE,
 						Status:         domain.NotificationDeliveryStatusSent,
-						SentAt:         &sentAt,
+						SentAt:         new(now),
 					}); err != nil {
 						return nil, fmt.Errorf("store custom sse delivery attempt: %w", err)
 					}

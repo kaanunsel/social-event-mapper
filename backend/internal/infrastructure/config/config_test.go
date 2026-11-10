@@ -174,10 +174,10 @@ func TestLoad_UsesAppEnvSpecificYaml(t *testing.T) {
 	dir := t.TempDir()
 	t.Chdir(dir)
 	writeConfigFile(t, dir, "local", mockMailerConfigYAML("localhost"))
-	writeConfigFile(t, dir, "dev", mockMailerConfigYAML("postgres"))
+	writeConfigFile(t, dir, "custom", mockMailerConfigYAML("postgres"))
 	clearConfigEnv(t)
-	t.Setenv("APP_ENV", "dev")
-	t.Setenv("JWT_SECRET", "dev-secret")
+	t.Setenv("APP_ENV", "custom")
+	t.Setenv("JWT_SECRET", "test-secret")
 
 	// when
 	cfg, err := Load()
@@ -187,7 +187,7 @@ func TestLoad_UsesAppEnvSpecificYaml(t *testing.T) {
 		t.Fatal(err)
 	}
 	if cfg.DBHost != "postgres" {
-		t.Fatalf("expected dev YAML to be loaded, got %+v", cfg)
+		t.Fatalf("expected custom YAML to be loaded, got %+v", cfg)
 	}
 }
 

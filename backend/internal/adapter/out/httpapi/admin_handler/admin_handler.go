@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/admin"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/admin"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Handler groups web-only admin backoffice handlers.

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct {

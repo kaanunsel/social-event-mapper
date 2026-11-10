@@ -3,9 +3,9 @@ package jwt
 import (
 	"fmt"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Verifier implements domain.TokenVerifier using HS256 JWT.

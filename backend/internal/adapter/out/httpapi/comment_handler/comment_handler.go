@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"strconv"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	commentapp "github.com/bounswe/bounswe2026group11/backend/internal/application/comment"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	commentapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/comment"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Handler groups HTTP handlers for event comments and reviews.
@@ -219,8 +219,7 @@ func parseOptionalInt(c *fiber.Ctx, name string) *int {
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
-		invalid := 0
-		return &invalid
+		return new(0)
 	}
 	return &parsed
 }

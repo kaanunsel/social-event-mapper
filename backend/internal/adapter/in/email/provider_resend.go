@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	emailapp "github.com/bounswe/bounswe2026group11/backend/internal/application/email"
+	emailapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/email"
 	"github.com/resend/resend-go/v3"
 )
 

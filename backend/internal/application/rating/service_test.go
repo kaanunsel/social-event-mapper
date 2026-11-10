@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct {
@@ -143,12 +143,12 @@ func TestUpsertEventRatingNormalizesBlankMessageAndRefreshesHostScore(t *testing
 			Status:                  domain.EventStatusCompleted,
 			PrivacyLevel:            domain.PrivacyPublic,
 			StartTime:               now.Add(-2 * time.Hour),
-			EndTime:                 timePtr(now.Add(-time.Hour)),
+			EndTime:                 new(now.Add(-time.Hour)),
 			IsApprovedParticipant:   true,
 			IsQualifyingParticipant: true,
 		},
 		hostedAggregate: &ScoreAggregate{
-			Average: floatPtr(4.5),
+			Average: new(4.5),
 			Count:   2,
 		},
 	}
@@ -159,7 +159,7 @@ func TestUpsertEventRatingNormalizesBlankMessageAndRefreshesHostScore(t *testing
 	// when
 	result, err := service.UpsertEventRating(context.Background(), participantUserID, eventID, UpsertRatingInput{
 		Rating:  5,
-		Message: stringPtr("   "),
+		Message: new("   "),
 	})
 
 	// then
@@ -193,7 +193,7 @@ func TestUpsertEventRatingRejectsInvalidInput(t *testing.T) {
 	// when
 	_, err := service.UpsertEventRating(context.Background(), uuid.New(), uuid.New(), UpsertRatingInput{
 		Rating:  6,
-		Message: stringPtr("short"),
+		Message: new("short"),
 	})
 
 	// then
@@ -213,7 +213,7 @@ func TestUpsertEventRatingRejectsCanceledEvent(t *testing.T) {
 			Status:                  domain.EventStatusCanceled,
 			PrivacyLevel:            domain.PrivacyPublic,
 			StartTime:               now.Add(-2 * time.Hour),
-			EndTime:                 timePtr(now.Add(-time.Hour)),
+			EndTime:                 new(now.Add(-time.Hour)),
 			IsApprovedParticipant:   true,
 			IsQualifyingParticipant: true,
 		},
@@ -242,7 +242,7 @@ func TestUpsertEventRatingRejectsHostSelfBeforeApprovedParticipantCheck(t *testi
 			Status:                domain.EventStatusActive,
 			PrivacyLevel:          domain.PrivacyPublic,
 			StartTime:             now.Add(-2 * time.Hour),
-			EndTime:               timePtr(now.Add(-time.Hour)),
+			EndTime:               new(now.Add(-time.Hour)),
 			IsRequestingHost:      true,
 			IsApprovedParticipant: false,
 		},
@@ -274,7 +274,7 @@ func TestUpsertParticipantRatingRejectsHostSelf(t *testing.T) {
 			ParticipantUserID:     hostUserID,
 			Status:                domain.EventStatusActive,
 			StartTime:             now.Add(-2 * time.Hour),
-			EndTime:               timePtr(now.Add(-time.Hour)),
+			EndTime:               new(now.Add(-time.Hour)),
 			IsRequestingHost:      true,
 			IsApprovedParticipant: true,
 		},
@@ -302,16 +302,16 @@ func TestUpsertParticipantRatingRefreshesWeightedFinalScore(t *testing.T) {
 			ParticipantUserID:     participantUserID,
 			Status:                domain.EventStatusActive,
 			StartTime:             now.Add(-2 * time.Hour),
-			EndTime:               timePtr(now.Add(-time.Hour)),
+			EndTime:               new(now.Add(-time.Hour)),
 			IsRequestingHost:      true,
 			IsApprovedParticipant: true,
 		},
 		participantAggregate: &ScoreAggregate{
-			Average: floatPtr(3.0),
+			Average: new(3.0),
 			Count:   2,
 		},
 		hostedAggregate: &ScoreAggregate{
-			Average: floatPtr(4.0),
+			Average: new(4.0),
 			Count:   10,
 		},
 	}
@@ -321,7 +321,7 @@ func TestUpsertParticipantRatingRefreshesWeightedFinalScore(t *testing.T) {
 	// when
 	_, err := service.UpsertParticipantRating(context.Background(), hostUserID, eventID, participantUserID, UpsertRatingInput{
 		Rating:  4,
-		Message: stringPtr("Shows up on time."),
+		Message: new("Shows up on time."),
 	})
 
 	// then
@@ -349,7 +349,7 @@ func TestDeleteEventRatingReturnsNotFoundWhenRecordMissing(t *testing.T) {
 			Status:                  domain.EventStatusCompleted,
 			PrivacyLevel:            domain.PrivacyPublic,
 			StartTime:               now.Add(-2 * time.Hour),
-			EndTime:                 timePtr(now.Add(-time.Hour)),
+			EndTime:                 new(now.Add(-time.Hour)),
 			IsApprovedParticipant:   true,
 			IsQualifyingParticipant: true,
 		},

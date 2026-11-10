@@ -45,9 +45,9 @@ func normalizeStringList(values []string) []string {
 }
 ```
 
-## Local and Development Defaults
+## Local Defaults
 
-Local and dev defaults are declared in both `backend/config/application.local.yaml` and `backend/config/application.dev.yaml`:
+Local defaults are declared in `backend/config/application.local.yaml`:
 
 ```yaml
 cors_allowed_origins:

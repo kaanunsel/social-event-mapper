@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	ticketapp "github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
 	"github.com/google/uuid"
+	ticketapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
 )
 
 func TestTicketTokenManagerIssuesAndVerifiesClaims(t *testing.T) {

@@ -11,18 +11,18 @@ import (
 	"testing"
 	"time"
 
-	pushadapter "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/firebasepush"
-	jwtadapter "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/jwt"
-	postgresrepo "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/postgres"
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi/admin_handler"
-	adminapp "github.com/bounswe/bounswe2026group11/backend/internal/application/admin"
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	ticketapp "github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	pushadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/firebasepush"
+	jwtadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/jwt"
+	postgresrepo "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/postgres"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi/admin_handler"
+	adminapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/admin"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	ticketapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestAdminUsersEndpointAuthorizationAndFiltering(t *testing.T) {

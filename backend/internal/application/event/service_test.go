@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/join_request"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/join_request"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeTxContextKey struct{}
@@ -598,7 +598,7 @@ func validInput() CreateEventInput {
 	start := time.Now().UTC().Add(time.Hour)
 	return CreateEventInput{
 		Title:        "Test Event",
-		Description:  stringPtr("A test description"),
+		Description:  new("A test description"),
 		CategoryID:   new(3),
 		PrivacyLevel: domain.PrivacyPublic,
 		LocationType: domain.LocationPoint,
@@ -670,9 +670,7 @@ func TestGetEventDetailMapsRepositoryRecord(t *testing.T) {
 	startTime := time.Now().UTC().Add(24 * time.Hour)
 	fixedNow := time.Now().UTC()
 	categoryID := 7
-	preferredGender := domain.GenderOther
 	hostFinalScore := 4.3
-	viewerRatingMessage := "Great event host."
 	viewerRatingCreatedAt := createdAt.Add(5 * time.Minute)
 	viewerRatingUpdatedAt := viewerRatingCreatedAt.Add(2 * time.Minute)
 	joinRequestImageURL := "https://cdn.example/join-request.jpg"
@@ -682,14 +680,14 @@ func TestGetEventDetailMapsRepositoryRecord(t *testing.T) {
 		ID:                       eventID,
 		VersionNo:                1,
 		Title:                    "Detail Event",
-		Description:              stringPtr("Full payload"),
-		ImageURL:                 stringPtr("https://example.com/event.png"),
+		Description:              new("Full payload"),
+		ImageURL:                 new("https://example.com/event.png"),
 		PrivacyLevel:             domain.PrivacyPrivate,
 		Status:                   domain.EventStatusCanceled,
 		StartTime:                startTime,
-		Capacity:                 intPtr(15),
-		MinimumAge:               intPtr(21),
-		PreferredGender:          &preferredGender,
+		Capacity:                 new(15),
+		MinimumAge:               new(21),
+		PreferredGender:          new(domain.GenderOther),
 		ApprovedParticipantCount: 3,
 		PendingParticipantCount:  1,
 		FavoriteCount:            5,
@@ -702,8 +700,8 @@ func TestGetEventDetailMapsRepositoryRecord(t *testing.T) {
 		Host: EventDetailPersonRecord{
 			ID:          uuid.New(),
 			Username:    "host_user",
-			DisplayName: stringPtr("Host User"),
-			AvatarURL:   stringPtr("https://example.com/avatar.png"),
+			DisplayName: new("Host User"),
+			AvatarURL:   new("https://example.com/avatar.png"),
 		},
 		HostScore: EventHostScoreSummaryRecord{
 			FinalScore:             &hostFinalScore,
@@ -711,7 +709,7 @@ func TestGetEventDetailMapsRepositoryRecord(t *testing.T) {
 		},
 		Location: EventDetailLocationRecord{
 			Type:    domain.LocationRoute,
-			Address: stringPtr("Belgrad Forest"),
+			Address: new("Belgrad Forest"),
 			RoutePoints: []domain.GeoPoint{
 				{Lat: 41.01, Lon: 29.02},
 				{Lat: 41.02, Lon: 29.03},
@@ -724,13 +722,13 @@ func TestGetEventDetailMapsRepositoryRecord(t *testing.T) {
 		ViewerContext: EventDetailViewerContextRecord{
 			IsHost:              false,
 			IsFavorited:         true,
-			ParticipationStatus: ptrParticipationStatus(domain.ParticipationStatusApproved),
+			ParticipationStatus: new(domain.ParticipationStatusApproved),
 			LatestEventVersion:  1,
 		},
 		ViewerEventRating: &EventDetailRatingRecord{
 			ID:        uuid.New(),
 			Rating:    5,
-			Message:   &viewerRatingMessage,
+			Message:   new("Great event host."),
 			CreatedAt: viewerRatingCreatedAt,
 			UpdatedAt: viewerRatingUpdatedAt,
 		},
@@ -863,12 +861,9 @@ func TestListEventApprovedParticipantsBuildsCursorPage(t *testing.T) {
 				Username: "second_user",
 			},
 		},
-	}
-	limit := 1
-
-	// when
+	} // when
 	result, err := svc.ListEventApprovedParticipants(context.Background(), hostID, eventID, ListEventCollectionInput{
-		Limit: &limit,
+		Limit: new(1),
 	})
 
 	// then
@@ -1185,8 +1180,8 @@ func TestCreateEventValidationRoutePointMissingLatitude(t *testing.T) {
 	input.Lat = nil
 	input.Lon = nil
 	input.RoutePoints = []RoutePointInput{
-		{Lat: nil, Lon: floatPtr(29.0)},
-		{Lat: floatPtr(41.1), Lon: floatPtr(29.1)},
+		{Lat: nil, Lon: new(29.0)},
+		{Lat: new(41.1), Lon: new(29.1)},
 	}
 
 	// when
@@ -1235,21 +1230,16 @@ func TestDiscoverEventsAppliesDefaultsAndMapsResults(t *testing.T) {
 	// given
 	svc, eventRepo, _, _ := newTestEventService()
 	userID := uuid.New()
-	lat := 41.0082
-	lon := 28.9784
 	startTime := time.Date(2030, time.January, 1, 18, 0, 0, 0, time.UTC)
-	imageURL := "https://example.com/event.jpg"
-	address := "Bebek, Istanbul"
-
 	eventRepo.discoverRecords = []DiscoverableEventRecord{
 		{
 			ID:                       uuid.New(),
 			Title:                    "Nearby Event",
 			CategoryName:             "Sports",
-			ImageURL:                 &imageURL,
+			ImageURL:                 new("https://example.com/event.jpg"),
 			StartTime:                startTime,
 			Status:                   domain.EventStatusActive,
-			LocationAddress:          &address,
+			LocationAddress:          new("Bebek, Istanbul"),
 			PrivacyLevel:             domain.PrivacyPublic,
 			ApprovedParticipantCount: 7,
 			IsFavorited:              true,
@@ -1259,8 +1249,8 @@ func TestDiscoverEventsAppliesDefaultsAndMapsResults(t *testing.T) {
 
 	// when
 	result, err := svc.DiscoverEvents(context.Background(), userID, DiscoverEventsInput{
-		Lat: &lat,
-		Lon: &lon,
+		Lat: new(41.0082),
+		Lon: new(28.9784),
 	})
 
 	// then
@@ -1319,11 +1309,8 @@ func TestDiscoverEventsAppliesDefaultsAndMapsResults(t *testing.T) {
 func TestListFavoriteEventsMapsPrivacyLevelAndLocationAddress(t *testing.T) {
 	// given
 	svc, eventRepo, _, _ := newTestEventService()
-	category := "Music"
-	imageURL := "https://example.com/favorite.jpg"
 	locationAddress := "Kadikoy, Istanbul"
 	startTime := time.Date(2030, time.January, 2, 18, 0, 0, 0, time.UTC)
-	endTime := time.Date(2030, time.January, 2, 21, 0, 0, 0, time.UTC)
 	favoritedAt := time.Date(2030, time.January, 1, 12, 0, 0, 0, time.UTC)
 	eventID := uuid.New()
 
@@ -1331,13 +1318,13 @@ func TestListFavoriteEventsMapsPrivacyLevelAndLocationAddress(t *testing.T) {
 		{
 			ID:              eventID,
 			Title:           "Sunset Concert",
-			CategoryName:    &category,
-			ImageURL:        &imageURL,
+			CategoryName:    new("Music"),
+			ImageURL:        new("https://example.com/favorite.jpg"),
 			Status:          domain.EventStatusActive,
 			PrivacyLevel:    domain.PrivacyProtected,
 			LocationAddress: &locationAddress,
 			StartTime:       startTime,
-			EndTime:         &endTime,
+			EndTime:         new(time.Date(2030, time.January, 2, 21, 0, 0, 0, time.UTC)),
 			FavoritedAt:     favoritedAt,
 		},
 	}
@@ -1368,14 +1355,12 @@ func TestListFavoriteEventsMapsPrivacyLevelAndLocationAddress(t *testing.T) {
 func TestDiscoverEventsDefaultsToRelevanceWhenQueryProvided(t *testing.T) {
 	// given
 	svc, eventRepo, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
 	query := "live music"
 
 	// when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:   &lat,
-		Lon:   &lon,
+		Lat:   new(41.0082),
+		Lon:   new(28.9784),
 		Query: &query,
 	})
 
@@ -1393,16 +1378,11 @@ func TestDiscoverEventsDefaultsToRelevanceWhenQueryProvided(t *testing.T) {
 
 func TestDiscoverEventsRejectsRelevanceWithoutQuery(t *testing.T) {
 	// given
-	svc, _, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
-	sortBy := domain.EventDiscoverySortRelevance
-
-	// when
+	svc, _, _, _ := newTestEventService() // when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:    &lat,
-		Lon:    &lon,
-		SortBy: &sortBy,
+		Lat:    new(41.0082),
+		Lon:    new(28.9784),
+		SortBy: new(domain.EventDiscoverySortRelevance),
 	})
 
 	// then
@@ -1411,16 +1391,11 @@ func TestDiscoverEventsRejectsRelevanceWithoutQuery(t *testing.T) {
 
 func TestDiscoverEventsRejectsInvalidCursor(t *testing.T) {
 	// given
-	svc, _, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
-	cursor := "%%%invalid%%%"
-
-	// when
+	svc, _, _, _ := newTestEventService() // when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:    &lat,
-		Lon:    &lon,
-		Cursor: &cursor,
+		Lat:    new(41.0082),
+		Lon:    new(28.9784),
+		Cursor: new("%%%invalid%%%"),
 	})
 
 	// then
@@ -1430,8 +1405,6 @@ func TestDiscoverEventsRejectsInvalidCursor(t *testing.T) {
 func TestDiscoverEventsRejectsCursorMismatch(t *testing.T) {
 	// given
 	svc, _, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
 	cursorValue, err := encodeDiscoverEventsCursor(DiscoverEventsCursor{
 		SortBy:            domain.EventDiscoverySortStartTime,
 		FilterFingerprint: "different-filter",
@@ -1444,8 +1417,8 @@ func TestDiscoverEventsRejectsCursorMismatch(t *testing.T) {
 
 	// when
 	_, err = svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:    &lat,
-		Lon:    &lon,
+		Lat:    new(41.0082),
+		Lon:    new(28.9784),
 		Cursor: &cursorValue,
 	})
 
@@ -1455,20 +1428,13 @@ func TestDiscoverEventsRejectsCursorMismatch(t *testing.T) {
 
 func TestDiscoverEventsRejectsOutOfRangeRadiusAndLimit(t *testing.T) {
 	// given
-	svc, _, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
-	radius := 50001
-	limit := 0
-	minimumAge := 121
-
-	// when
+	svc, _, _, _ := newTestEventService() // when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:          &lat,
-		Lon:          &lon,
-		RadiusMeters: &radius,
-		MinimumAge:   &minimumAge,
-		Limit:        &limit,
+		Lat:          new(41.0082),
+		Lon:          new(28.9784),
+		RadiusMeters: new(50001),
+		MinimumAge:   new(121),
+		Limit:        new(0),
 	})
 
 	// then
@@ -1480,14 +1446,12 @@ func TestDiscoverEventsRejectsOutOfRangeRadiusAndLimit(t *testing.T) {
 func TestDiscoverEventsPassesMinimumAgeFilterToRepo(t *testing.T) {
 	// given
 	svc, eventRepo, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
 	minimumAge := 18
 
 	// when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:        &lat,
-		Lon:        &lon,
+		Lat:        new(41.0082),
+		Lon:        new(28.9784),
 		MinimumAge: &minimumAge,
 	})
 
@@ -1502,14 +1466,10 @@ func TestDiscoverEventsPassesMinimumAgeFilterToRepo(t *testing.T) {
 
 func TestDiscoverEventsRejectsPrivateVisibilityFilter(t *testing.T) {
 	// given
-	svc, _, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
-
-	// when
+	svc, _, _, _ := newTestEventService() // when
 	_, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:           &lat,
-		Lon:           &lon,
+		Lat:           new(41.0082),
+		Lon:           new(28.9784),
 		PrivacyLevels: []domain.EventPrivacyLevel{domain.PrivacyPrivate},
 	})
 
@@ -1520,9 +1480,6 @@ func TestDiscoverEventsRejectsPrivateVisibilityFilter(t *testing.T) {
 func TestDiscoverEventsBuildsNextCursorFromLastReturnedItem(t *testing.T) {
 	// given
 	svc, eventRepo, _, _ := newTestEventService()
-	lat := 41.0082
-	lon := 28.9784
-	limit := 1
 	first := DiscoverableEventRecord{
 		ID:                       uuid.New(),
 		Title:                    "First Event",
@@ -1547,9 +1504,9 @@ func TestDiscoverEventsBuildsNextCursorFromLastReturnedItem(t *testing.T) {
 
 	// when
 	result, err := svc.DiscoverEvents(context.Background(), uuid.New(), DiscoverEventsInput{
-		Lat:   &lat,
-		Lon:   &lon,
-		Limit: &limit,
+		Lat:   new(41.0082),
+		Lon:   new(28.9784),
+		Limit: new(1),
 	})
 
 	// then
@@ -1618,25 +1575,21 @@ func publicEventWithCapacity(hostID uuid.UUID, capacity, approvedCount int) *dom
 }
 
 func editableEvent(hostID uuid.UUID) *domain.Event {
-	categoryID := 1
-	capacity := 10
-	description := "Original description"
-	locationType := domain.LocationPoint
 	now := time.Now().UTC()
 	return &domain.Event{
 		ID:                       uuid.New(),
 		HostID:                   hostID,
 		Title:                    "Original title",
-		Description:              &description,
-		CategoryID:               &categoryID,
+		Description:              new("Original description"),
+		CategoryID:               new(1),
 		PrivacyLevel:             domain.PrivacyProtected,
 		Status:                   domain.EventStatusActive,
 		StartTime:                now.Add(2 * time.Hour),
-		EndTime:                  timePtr(now.Add(3 * time.Hour)),
-		Capacity:                 &capacity,
+		EndTime:                  new(now.Add(3 * time.Hour)),
+		Capacity:                 new(10),
 		ApprovedParticipantCount: 2,
 		PendingParticipantCount:  1,
-		LocationType:             &locationType,
+		LocationType:             new(domain.LocationPoint),
 		CreatedAt:                now.Add(-time.Hour),
 		UpdatedAt:                now.Add(-time.Hour),
 	}
@@ -1647,7 +1600,6 @@ func TestGetEventDetailReturnsDiffFromViewerLastConfirmedVersion(t *testing.T) {
 	svc, eventRepo, _, _ := newTestEventService()
 	eventID := uuid.New()
 	userID := uuid.New()
-	lastConfirmed := 3
 	eventRepo.detailRecord = &EventDetailRecord{
 		ID:           eventID,
 		VersionNo:    5,
@@ -1663,8 +1615,8 @@ func TestGetEventDetailReturnsDiffFromViewerLastConfirmedVersion(t *testing.T) {
 			Point: &domain.GeoPoint{Lat: 41, Lon: 29},
 		},
 		ViewerContext: EventDetailViewerContextRecord{
-			ParticipationStatus:       ptrParticipationStatus(domain.ParticipationStatusPending),
-			LastConfirmedEventVersion: &lastConfirmed,
+			ParticipationStatus:       new(domain.ParticipationStatusPending),
+			LastConfirmedEventVersion: new(3),
 			LatestEventVersion:        5,
 		},
 	}
@@ -1724,11 +1676,8 @@ func TestUpdateEventTriggeringChangeMarksApprovedParticipantsPendingAndTickets(t
 	ev := editableEvent(hostID)
 	svc, _, participationService, _, ticketService := newTestEventServiceWithEventAndTickets(ev)
 	participantID := uuid.New()
-	participationService.pendingUserIDs = []uuid.UUID{participantID}
-	newTitle := "Updated title"
-
-	// when
-	result, err := svc.UpdateEvent(context.Background(), hostID, ev.ID, UpdateEventInput{Title: &newTitle})
+	participationService.pendingUserIDs = []uuid.UUID{participantID} // when
+	result, err := svc.UpdateEvent(context.Background(), hostID, ev.ID, UpdateEventInput{Title: new("Updated title")})
 
 	// then
 	if err != nil {
@@ -1786,11 +1735,8 @@ func TestUpdateEventRejectsCapacityBelowApprovedAndPendingCount(t *testing.T) {
 	// given
 	hostID := uuid.New()
 	ev := editableEvent(hostID)
-	svc, _, _, _ := newTestEventServiceWithEvent(ev)
-	capacity := 2
-
-	// when
-	_, err := svc.UpdateEvent(context.Background(), hostID, ev.ID, UpdateEventInput{Capacity: OptionalInt{Set: true, Value: &capacity}})
+	svc, _, _, _ := newTestEventServiceWithEvent(ev) // when
+	_, err := svc.UpdateEvent(context.Background(), hostID, ev.ID, UpdateEventInput{Capacity: OptionalInt{Set: true, Value: new(2)}})
 
 	// then
 	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Code != domain.ErrorCodeCapacityBelowParticipantCount {
@@ -1986,8 +1932,7 @@ func TestCompleteEventForbiddenForNonHost(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	var appErr *domain.AppError
-	if !errors.As(err, &appErr) || appErr.Status != 403 || appErr.Code != domain.ErrorCodeEventCompleteNotAllowed {
+	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Status != 403 || appErr.Code != domain.ErrorCodeEventCompleteNotAllowed {
 		t.Fatalf("expected 403 event_complete_not_allowed, got %v", err)
 	}
 }
@@ -2002,8 +1947,7 @@ func TestCompleteEventConflictWhenTerminal(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	var appErr *domain.AppError
-	if !errors.As(err, &appErr) || appErr.Status != 409 || appErr.Code != domain.ErrorCodeEventNotCompletable {
+	if appErr, ok := errors.AsType[*domain.AppError](err); !ok || appErr.Status != 409 || appErr.Code != domain.ErrorCodeEventNotCompletable {
 		t.Fatalf("expected 409 event_not_completable, got %v", err)
 	}
 }
@@ -2083,14 +2027,13 @@ func TestTransitionExpiredEventsPropagatesRepositoryError(t *testing.T) {
 
 func leaveableEvent(hostID uuid.UUID) *domain.Event {
 	start := time.Now().UTC().Add(time.Hour)
-	end := start.Add(2 * time.Hour)
 	return &domain.Event{
 		ID:           uuid.New(),
 		HostID:       hostID,
 		PrivacyLevel: domain.PrivacyPublic,
 		Status:       domain.EventStatusActive,
 		StartTime:    start,
-		EndTime:      &end,
+		EndTime:      new(start.Add(2 * time.Hour)),
 	}
 }
 
@@ -2242,11 +2185,11 @@ func TestJoinEventRejectsUnderageUser(t *testing.T) {
 	hostID := uuid.New()
 	joinerID := uuid.New()
 	ev := publicEvent(hostID)
-	ev.MinimumAge = ptrInt(18)
+	ev.MinimumAge = new(18)
 	svc, repo, _, _ := newTestEventServiceWithEvent(ev)
 	repo.requesters[joinerID] = &domain.User{
 		ID:        joinerID,
-		BirthDate: ptrTime(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)),
+		BirthDate: new(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)),
 	}
 
 	_, err := svc.JoinEvent(context.Background(), joinerID, ev.ID)
@@ -2263,11 +2206,11 @@ func TestJoinEventRejectsMismatchedGender(t *testing.T) {
 	hostID := uuid.New()
 	joinerID := uuid.New()
 	ev := publicEvent(hostID)
-	ev.PreferredGender = ptrGender(domain.GenderFemale)
+	ev.PreferredGender = new(domain.GenderFemale)
 	svc, repo, _, _ := newTestEventServiceWithEvent(ev)
 	repo.requesters[joinerID] = &domain.User{
 		ID:     joinerID,
-		Gender: ptrString(string(domain.GenderMale)),
+		Gender: new(string(domain.GenderMale)),
 	}
 
 	_, err := svc.JoinEvent(context.Background(), joinerID, ev.ID)
@@ -2284,7 +2227,7 @@ func TestJoinEventRejectsMissingBirthDateWhenAgeRestricted(t *testing.T) {
 	hostID := uuid.New()
 	joinerID := uuid.New()
 	ev := publicEvent(hostID)
-	ev.MinimumAge = ptrInt(18)
+	ev.MinimumAge = new(18)
 	svc, repo, _, _ := newTestEventServiceWithEvent(ev)
 	repo.requesters[joinerID] = &domain.User{ID: joinerID}
 
@@ -2500,11 +2443,11 @@ func TestRequestJoinRejectsUnderageUser(t *testing.T) {
 	hostID := uuid.New()
 	joinerID := uuid.New()
 	ev := protectedEvent(hostID)
-	ev.MinimumAge = ptrInt(18)
+	ev.MinimumAge = new(18)
 	svc, repo, _, _ := newTestEventServiceWithEvent(ev)
 	repo.requesters[joinerID] = &domain.User{
 		ID:        joinerID,
-		BirthDate: ptrTime(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)),
+		BirthDate: new(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)),
 	}
 
 	_, err := svc.RequestJoin(context.Background(), joinerID, ev.ID, RequestJoinInput{})
@@ -2521,11 +2464,11 @@ func TestRequestJoinRejectsMismatchedGender(t *testing.T) {
 	hostID := uuid.New()
 	joinerID := uuid.New()
 	ev := protectedEvent(hostID)
-	ev.PreferredGender = ptrGender(domain.GenderFemale)
+	ev.PreferredGender = new(domain.GenderFemale)
 	svc, repo, _, _ := newTestEventServiceWithEvent(ev)
 	repo.requesters[joinerID] = &domain.User{
 		ID:     joinerID,
-		Gender: ptrString(string(domain.GenderMale)),
+		Gender: new(string(domain.GenderMale)),
 	}
 
 	_, err := svc.RequestJoin(context.Background(), joinerID, ev.ID, RequestJoinInput{})

@@ -3,7 +3,7 @@ package event
 import (
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 var exactPoint = &domain.GeoPoint{Lat: 41.01234, Lon: 29.98765}
@@ -22,7 +22,7 @@ func TestToEventDetailLocationPublicEventNeverFuzzes(t *testing.T) {
 		status *domain.ParticipationStatus
 	}{
 		{"host", true, nil},
-		{"joined participant", false, testParticipationStatus(domain.ParticipationStatusApproved)},
+		{"joined participant", false, new(domain.ParticipationStatusApproved)},
 		{"non-participant", false, nil},
 	}
 
@@ -50,10 +50,10 @@ func TestToEventDetailLocationProtectedEventFuzzesNonParticipants(t *testing.T) 
 		wantExact bool
 	}{
 		{"host gets exact", true, nil, true},
-		{"approved gets exact", false, testParticipationStatus(domain.ParticipationStatusApproved), true},
-		{"pending reconfirmation gets exact", false, testParticipationStatus(domain.ParticipationStatusPending), true},
+		{"approved gets exact", false, new(domain.ParticipationStatusApproved), true},
+		{"pending reconfirmation gets exact", false, new(domain.ParticipationStatusPending), true},
 		{"none gets approximate", false, nil, false},
-		{"leaved gets approximate", false, testParticipationStatus(domain.ParticipationStatusLeaved), false},
+		{"leaved gets approximate", false, new(domain.ParticipationStatusLeaved), false},
 	}
 
 	for _, tc := range cases {

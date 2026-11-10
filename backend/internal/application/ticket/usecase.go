@@ -3,8 +3,8 @@ package ticket
 import (
 	"context"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // UseCase is the inbound application port for ticket flows.

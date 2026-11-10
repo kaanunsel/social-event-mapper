@@ -25,7 +25,7 @@ import (
 const (
 	defaultServiceName      = "sem-backend"
 	defaultServiceNamespace = "social-event-mapper"
-	logScopeName            = "github.com/bounswe/bounswe2026group11/backend"
+	logScopeName            = "github.com/kaanunsel/social-event-mapper/backend"
 	shutdownTimeout         = 10 * time.Second
 )
 

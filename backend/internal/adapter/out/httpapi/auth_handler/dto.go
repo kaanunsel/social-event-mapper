@@ -1,6 +1,6 @@
 package auth_handler
 
-import "github.com/bounswe/bounswe2026group11/backend/internal/domain"
+import "github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 
 type requestOTPBody struct {
 	Email string `json:"email"`

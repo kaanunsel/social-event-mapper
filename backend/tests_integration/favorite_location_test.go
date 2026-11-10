@@ -6,10 +6,10 @@ import (
 	"context"
 	"testing"
 
-	favoritelocationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/favorite_location"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	favoritelocationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/favorite_location"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestFavoriteLocationCRUDOrdersAlphabetically(t *testing.T) {

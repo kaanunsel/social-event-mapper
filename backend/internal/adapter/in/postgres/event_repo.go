@@ -9,14 +9,14 @@ import (
 	"sync"
 	"time"
 
-	eventapp "github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	imageuploadapp "github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	eventapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	imageuploadapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // EventRepository is the Postgres-backed implementation of event.Repository.
@@ -139,15 +139,12 @@ func (r *EventRepository) GetEventEditSnapshot(ctx context.Context, eventID uuid
 		*event.MinimumAge = int(minimumAge.Int32)
 	}
 	if preferredGender.Valid {
-		gender := domain.EventParticipantGender(preferredGender.String)
-		event.PreferredGender = &gender
+		event.PreferredGender = new(domain.EventParticipantGender(preferredGender.String))
 	}
 	if locationType.Valid {
-		locType := domain.EventLocationType(locationType.String)
-		event.LocationType = &locType
+		event.LocationType = new(domain.EventLocationType(locationType.String))
 	} else {
-		locType := domain.LocationPoint
-		event.LocationType = &locType
+		event.LocationType = new(domain.LocationPoint)
 	}
 
 	location, err := r.loadEventEditLocation(ctx, eventID, *event.LocationType)
@@ -539,8 +536,7 @@ func updateEventRow(ctx context.Context, db execer, params eventapp.UpdateEventP
 	}
 	event.PrivacyLevel = domain.EventPrivacyLevel(privacyLevel)
 	event.Status = domain.EventStatus(status)
-	locType := domain.EventLocationType(locationType)
-	event.LocationType = &locType
+	event.LocationType = new(domain.EventLocationType(locationType))
 	return &event, nil
 }
 
@@ -1536,8 +1532,7 @@ func (r *EventRepository) loadEventDetailCore(
 		*record.MinimumAge = int(minimumAge.Int32)
 	}
 	if preferredGender.Valid {
-		gender := domain.EventParticipantGender(preferredGender.String)
-		record.PreferredGender = &gender
+		record.PreferredGender = new(domain.EventParticipantGender(preferredGender.String))
 	}
 	if categoryID.Valid {
 		record.Category = &eventapp.EventDetailCategoryRecord{
@@ -1560,20 +1555,16 @@ func (r *EventRepository) loadEventDetailCore(
 		record.Location.Address = &locationAddress.String
 	}
 	if participationStatus.Valid {
-		status := domain.ParticipationStatus(participationStatus.String)
-		record.ViewerContext.ParticipationStatus = &status
+		record.ViewerContext.ParticipationStatus = new(domain.ParticipationStatus(participationStatus.String))
 	}
 	if joinRequestStatus.Valid {
-		status := domain.JoinRequestStatus(joinRequestStatus.String)
-		record.ViewerContext.JoinRequestStatus = &status
+		record.ViewerContext.JoinRequestStatus = new(domain.JoinRequestStatus(joinRequestStatus.String))
 	}
 	if invitationStatus.Valid {
-		status := domain.InvitationStatus(invitationStatus.String)
-		record.ViewerContext.InvitationStatus = &status
+		record.ViewerContext.InvitationStatus = new(domain.InvitationStatus(invitationStatus.String))
 	}
 	if lastConfirmedVersion.Valid {
-		version := int(lastConfirmedVersion.Int32)
-		record.ViewerContext.LastConfirmedEventVersion = &version
+		record.ViewerContext.LastConfirmedEventVersion = new(int(lastConfirmedVersion.Int32))
 	}
 	record.ChildFriendly = childFriendly
 	record.FamilyOriented = familyOriented
@@ -2192,12 +2183,10 @@ func (r *EventRepository) GetRequesterForJoin(ctx context.Context, userID uuid.U
 
 	user := &domain.User{ID: id}
 	if gender.Valid {
-		g := gender.String
-		user.Gender = &g
+		user.Gender = new(gender.String)
 	}
 	if birthDate.Valid {
-		t := birthDate.Time
-		user.BirthDate = &t
+		user.BirthDate = new(birthDate.Time)
 	}
 	return user, nil
 }

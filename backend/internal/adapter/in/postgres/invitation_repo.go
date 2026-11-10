@@ -7,12 +7,12 @@ import (
 	"regexp"
 	"time"
 
-	invitationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/invitation"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	invitationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/invitation"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type InvitationRepository struct {
@@ -558,16 +558,13 @@ func (r *InvitationRepository) loadInvitationEventState(
 		VersionNo:                versionNo,
 	}
 	if capacity.Valid {
-		value := int(capacity.Int32)
-		event.Capacity = &value
+		event.Capacity = new(int(capacity.Int32))
 	}
 	if minimumAge.Valid {
-		value := int(minimumAge.Int32)
-		event.MinimumAge = &value
+		event.MinimumAge = new(int(minimumAge.Int32))
 	}
 	if preferredGender.Valid {
-		value := domain.EventParticipantGender(preferredGender.String)
-		event.PreferredGender = &value
+		event.PreferredGender = new(domain.EventParticipantGender(preferredGender.String))
 	}
 	return event, nil
 }
@@ -854,8 +851,7 @@ func (r *InvitationRepository) loadUserForEligibility(ctx context.Context, userI
 		user.Gender = &gender.String
 	}
 	if birthDate.Valid {
-		value := birthDate.Time
-		user.BirthDate = &value
+		user.BirthDate = new(birthDate.Time)
 	}
 	return user, nil
 }

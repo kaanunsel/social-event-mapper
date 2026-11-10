@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 func loadParticipation(
@@ -67,8 +67,7 @@ func scanParticipation(
 		UpdatedAt:     updatedAt,
 	}
 	if lastConfirmedVersion.Valid {
-		value := int(lastConfirmedVersion.Int32)
-		participation.LastConfirmedEventVersion = &value
+		participation.LastConfirmedEventVersion = new(int(lastConfirmedVersion.Int32))
 	}
 
 	return participation, nil

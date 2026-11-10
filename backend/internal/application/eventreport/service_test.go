@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeEventReportRepo struct {
@@ -82,21 +82,19 @@ func TestCreateEventReportRequiresMessage(t *testing.T) {
 }
 
 func TestCreateEventReportRejectsImageBeforeEventStarts(t *testing.T) {
-	token := "token"
 	service := NewService(&fakeEventReportRepo{reportContext: baseReportContext(domain.EventStatusActive)})
 	service.SetReportImageConfirmer(fakeReportImageConfirmer{baseURL: "https://cdn.example/report.jpg"})
 
 	_, err := service.CreateEventReport(context.Background(), uuid.New(), uuid.New(), CreateEventReportInput{
 		Category:          domain.EventReportCategorySafety,
 		Message:           "needs an image",
-		ImageConfirmToken: &token,
+		ImageConfirmToken: new("token"),
 	})
 
 	requireReportAppError(t, err, domain.ErrorCodeEventReportImageNotAllowed)
 }
 
 func TestCreateEventReportStoresConfirmedImageForInProgressEvent(t *testing.T) {
-	token := "token"
 	repo := &fakeEventReportRepo{reportContext: baseReportContext(domain.EventStatusInProgress)}
 	service := NewService(repo)
 	service.SetReportImageConfirmer(fakeReportImageConfirmer{baseURL: "https://cdn.example/report.jpg"})
@@ -104,7 +102,7 @@ func TestCreateEventReportStoresConfirmedImageForInProgressEvent(t *testing.T) {
 	_, err := service.CreateEventReport(context.Background(), uuid.New(), uuid.New(), CreateEventReportInput{
 		Category:          domain.EventReportCategoryInappropriateContent,
 		Message:           "inappropriate incident happened",
-		ImageConfirmToken: &token,
+		ImageConfirmToken: new("token"),
 	})
 
 	if err != nil {

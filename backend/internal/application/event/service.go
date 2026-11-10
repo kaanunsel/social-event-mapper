@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/join_request"
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/participation"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/join_request"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/participation"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Service implements the event use cases.
@@ -879,8 +879,6 @@ func (s *Service) notifyEventCanceled(ctx context.Context, event *domain.Event, 
 		return
 	}
 
-	notificationType := "EVENT_CANCELED"
-	deepLink := fmt.Sprintf("/events/%s", event.ID.String())
 	body := fmt.Sprintf("The event \"%s\" has been cancelled by the host.", event.Title)
 	data := map[string]string{
 		"event_id":         event.ID.String(),
@@ -895,8 +893,8 @@ func (s *Service) notifyEventCanceled(ctx context.Context, event *domain.Event, 
 		Body:           body,
 		BodyKey:        "notification.event.cancelled.body",
 		BodyArgs:       []any{event.Title},
-		Type:           &notificationType,
-		DeepLink:       &deepLink,
+		Type:           new("EVENT_CANCELED"),
+		DeepLink:       new(fmt.Sprintf("/events/%s", event.ID.String())),
 		EventID:        &event.ID,
 		ImageURL:       event.ImageURL,
 		Data:           data,
@@ -917,8 +915,6 @@ func (s *Service) notifyEventReconfirmationRequired(ctx context.Context, event *
 		return
 	}
 
-	notificationType := "EVENT_RECONFIRMATION_REQUIRED"
-	deepLink := fmt.Sprintf("/events/%s", event.ID.String())
 	body := fmt.Sprintf("The event \"%s\" has changed. Please reconfirm your attendance.", event.Title)
 	data := map[string]string{
 		"event_id":         event.ID.String(),
@@ -932,8 +928,8 @@ func (s *Service) notifyEventReconfirmationRequired(ctx context.Context, event *
 		UserIDs:        userIDs,
 		Title:          "Event details changed",
 		Body:           body,
-		Type:           &notificationType,
-		DeepLink:       &deepLink,
+		Type:           new("EVENT_RECONFIRMATION_REQUIRED"),
+		DeepLink:       new(fmt.Sprintf("/events/%s", event.ID.String())),
 		EventID:        &event.ID,
 		ImageURL:       event.ImageURL,
 		Data:           data,

@@ -84,6 +84,10 @@ github.com/gofiber/contrib/otelfiber/v2 v2.2.3 h1:WKW1XezHFAoohGZwnvC0R8TFJcNkab
 github.com/gofiber/contrib/otelfiber/v2 v2.2.3/go.mod h1:WdQ1tYbL83IYC6oBaWvKBMVGSAYvSTRuUWTcr0wK1T4=
 github.com/gofiber/fiber/v2 v2.52.12 h1:0LdToKclcPOj8PktUdIKo9BUohjjwfnQl42Dhw8/WUw=
 github.com/gofiber/fiber/v2 v2.52.12/go.mod h1:YEcBbO/FB+5M1IZNBP9FO3J9281zgPAreiI1oqg8nDw=
+github.com/gofiber/fiber/v2 v2.52.14-0.20260703194503-33c9501288ab h1:gS2uPU93CtiS0NvRQDqkfjUCpW4XwZCSSgo62ulk2ik=
+github.com/gofiber/fiber/v2 v2.52.14-0.20260703194503-33c9501288ab/go.mod h1:YEcBbO/FB+5M1IZNBP9FO3J9281zgPAreiI1oqg8nDw=
+github.com/gofiber/fiber/v2 v2.52.16 h1:lBemN7sjeTPwEdK/9AIAQ3YpYpzEZefiWI/vQT/6dFU=
+github.com/gofiber/fiber/v2 v2.52.16/go.mod h1:dFf1PKExrrSfg/hvoP2yXL35W3bGlzZf71KX+IYzkpg=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
 github.com/golang-jwt/jwt/v5 v5.3.1/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=

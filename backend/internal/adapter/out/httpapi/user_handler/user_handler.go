@@ -3,9 +3,9 @@ package user_handler
 import (
 	"log/slog"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/profile"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/profile"
 )
 
 type Handler struct {

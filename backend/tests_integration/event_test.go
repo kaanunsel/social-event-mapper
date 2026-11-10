@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
-	postgresrepo "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/postgres"
-	eventapp "github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	invitationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/invitation"
-	joinrequestapp "github.com/bounswe/bounswe2026group11/backend/internal/application/join_request"
-	notificationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/notification"
-	ratingapp "github.com/bounswe/bounswe2026group11/backend/internal/application/rating"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
 	"github.com/google/uuid"
+	postgresrepo "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/postgres"
+	eventapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	invitationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/invitation"
+	joinrequestapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/join_request"
+	notificationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/notification"
+	ratingapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/rating"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestCreateEventSuccessPath(t *testing.T) {

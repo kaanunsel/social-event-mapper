@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	adminapp "github.com/bounswe/bounswe2026group11/backend/internal/application/admin"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	adminapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/admin"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // AdminRepository is the Postgres-backed implementation of admin.Repository.
@@ -1465,8 +1465,7 @@ func scanAdminParticipation(row pgx.Row, operation string) (*domain.Participatio
 	participation.Status = parsed
 	participation.ReconfirmedAt = timestamptzPtr(reconfirmedAt)
 	if lastConfirmedVersion.Valid {
-		value := int(lastConfirmedVersion.Int32)
-		participation.LastConfirmedEventVersion = &value
+		participation.LastConfirmedEventVersion = new(int(lastConfirmedVersion.Int32))
 	}
 	return &participation, nil
 }
@@ -1497,8 +1496,7 @@ func intPtr(value pgtype.Int4) *int {
 	if !value.Valid {
 		return nil
 	}
-	converted := int(value.Int32)
-	return &converted
+	return new(int(value.Int32))
 }
 
 func scanAdminEventReport(rows pgx.Rows, totalCount *int) (*adminapp.AdminEventReportItem, error) {

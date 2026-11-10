@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Service owns event comment and review application behavior.
@@ -162,8 +162,7 @@ func (s *Service) CreateDiscussionComment(ctx context.Context, userID, eventID u
 		return nil, err
 	}
 
-	mapped := toCommentResult(*result)
-	return &mapped, nil
+	return new(toCommentResult(*result)), nil
 }
 
 // UpsertReviewComment creates or updates the caller's completed-event review.
@@ -222,8 +221,7 @@ func (s *Service) UpsertReviewComment(ctx context.Context, userID, eventID uuid.
 		return nil, err
 	}
 
-	mapped := toCommentResult(*result)
-	return &mapped, nil
+	return new(toCommentResult(*result)), nil
 }
 
 // DeleteReviewComment hard deletes the caller's completed-event review.

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Service owns profile-specific application behavior.
@@ -65,8 +65,7 @@ func (s *Service) GetMyProfile(ctx context.Context, userID uuid.UUID) (*GetProfi
 	}
 
 	if p.BirthDate != nil {
-		formatted := p.BirthDate.Format("2006-01-02")
-		result.BirthDate = &formatted
+		result.BirthDate = new(p.BirthDate.Format("2006-01-02"))
 	}
 
 	return result, nil

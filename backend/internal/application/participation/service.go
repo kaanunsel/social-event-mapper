@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // BadgeEvaluator is the local port for triggering participation-related badge

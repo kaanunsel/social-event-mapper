@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	postgresrepo "github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/postgres"
-	imageuploadapp "github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
+	postgresrepo "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/postgres"
+	imageuploadapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 type fakeStorage struct {

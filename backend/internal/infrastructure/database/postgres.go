@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/infrastructure/config"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/infrastructure/config"
 )
 
 // OpenDB creates a pgx connection pool from the given config and verifies

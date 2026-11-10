@@ -1,9 +1,9 @@
 package category_handler
 
 import (
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/category"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/category"
 )
 
 // CategoryHandler groups HTTP handlers that delegate to the category use-case port.

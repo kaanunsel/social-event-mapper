@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // ReviewImageConfirmer verifies an uploaded review image and returns its public

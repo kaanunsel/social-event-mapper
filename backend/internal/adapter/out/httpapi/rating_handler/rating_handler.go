@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	ratingapp "github.com/bounswe/bounswe2026group11/backend/internal/application/rating"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	ratingapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/rating"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // RatingHandler groups HTTP handlers that delegate to the rating use-case port.

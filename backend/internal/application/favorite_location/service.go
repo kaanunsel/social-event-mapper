@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/uow"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/uow"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // BadgeEvaluator is the local port for triggering favorite-location badge
@@ -90,8 +90,7 @@ func (s *Service) CreateMyFavoriteLocation(ctx context.Context, input CreateFavo
 	}
 
 	s.evaluateFavoriteLocationBadges(ctx, input.UserID)
-	result := toFavoriteLocationResult(*location)
-	return &result, nil
+	return new(toFavoriteLocationResult(*location)), nil
 }
 
 // UpdateMyFavoriteLocation applies a partial update to one of the authenticated user's favorite locations.
@@ -143,8 +142,7 @@ func (s *Service) UpdateMyFavoriteLocation(ctx context.Context, input UpdateFavo
 		return nil, err
 	}
 
-	result := toFavoriteLocationResult(*location)
-	return &result, nil
+	return new(toFavoriteLocationResult(*location)), nil
 }
 
 // DeleteMyFavoriteLocation removes one of the authenticated user's favorite locations.

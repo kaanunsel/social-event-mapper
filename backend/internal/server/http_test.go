@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/infrastructure/config"
 	"github.com/gofiber/fiber/v2"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/infrastructure/config"
 )
 
 func securityTestApp(cfg *config.Config) *fiber.App {

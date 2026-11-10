@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ticketapp "github.com/bounswe/bounswe2026group11/backend/internal/application/ticket"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	ticketapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/ticket"
 )
 
 type ticketTokenClaims struct {

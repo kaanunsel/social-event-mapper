@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type fakeUnitOfWork struct{}
@@ -165,14 +165,11 @@ func TestUpdateMyFavoriteLocationMergesExistingFields(t *testing.T) {
 			UpdatedAt: time.Now().UTC(),
 		},
 	}
-	service := NewService(repo, &fakeUnitOfWork{})
-	newName := "  HQ  "
-
-	// when
+	service := NewService(repo, &fakeUnitOfWork{}) // when
 	result, err := service.UpdateMyFavoriteLocation(context.Background(), UpdateFavoriteLocationInput{
 		UserID:             repo.getResult.UserID,
 		FavoriteLocationID: repo.getResult.ID,
-		Name:               &newName,
+		Name:               new("  HQ  "),
 	})
 
 	// then

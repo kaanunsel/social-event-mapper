@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/bootstrap"
-	"github.com/bounswe/bounswe2026group11/backend/internal/infrastructure/observability"
-	"github.com/bounswe/bounswe2026group11/backend/internal/server"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/bootstrap"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/infrastructure/observability"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/server"
 )
 
 func main() {

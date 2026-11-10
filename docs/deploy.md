@@ -1,47 +1,28 @@
-# Deployment (dev droplet, Docker Hub)
+# Local Stack and Configuration
 
-This document matches the **remote dev** stack: pre-built images on Docker Hub (a rolling `:latest` tag plus an immutable deploy tag such as a commit SHA), [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml), and **secrets in GitHub** — not a hand-maintained `deploy/.env` on the server long term.
+This document covers the local Docker Compose stack, API documentation serving, and the runtime configuration contract. Remote deployment is not defined in this repository yet.
 
-## Compose files in the repo
+## Compose file
 
 | File | Purpose |
 |------|---------|
-| [`deploy/docker-compose.local.yml`](../deploy/docker-compose.local.yml) | **Local:** `build:` from `../backend` and `../frontend`. Postgres is published to **127.0.0.1:5433** on the host (→ container `5432`) for development (psql, GUI clients). |
-| [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml) | **Dev droplet:** `image:` from Docker Hub using `${IMAGE_TAG:-latest}`; no source build on the server. Postgres is published to **127.0.0.1:5432** on the host (→ container `5432`) for inspection, ad-hoc queries, and SSH tunneling during testing. |
+| [`deploy/docker-compose.local.yml`](../deploy/docker-compose.local.yml) | `build:` from `../backend` and `../frontend`. Postgres is published to **127.0.0.1:5433** on the host (→ container `5432`) for psql and GUI clients. |
 
-For local development, run from the **repository root** so Compose’s default project directory is `deploy/` and `deploy/.env` is loaded: `docker compose -f deploy/docker-compose.local.yml up --build`. For the dev server, mirror the repo under e.g. `/opt/sem/` (`deploy/` including `deploy/.env`, `nginx/`, `certs/`) and run `docker compose -f deploy/docker-compose.dev.yml ...` from that root — paths in the compose file resolve from `deploy/`, so `../nginx/nginx.dev.conf` resolves correctly.
-
-### Postgres host ports (development only)
-
-When you use [`deploy/docker-compose.local.yml`](../deploy/docker-compose.local.yml), PostGIS is reachable on **127.0.0.1:5433** on your machine (host port only; the container still uses `5432` internally). Connect with user `postgres`, database `sem`, and the password from `deploy/.env`.
-
-When you use [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml), PostGIS is reachable on the dev host at **127.0.0.1:5432** by default. This is still dev-only exposure: the bind address is loopback, so the database is not opened to the public network. It is intended for manual inspection on the host and for SSH tunnels from a developer machine.
-
-Keep this scoped to the dev stack. A future production compose file should not inherit a host-published Postgres port unless there is a separate, reviewed operational requirement.
-
-Common connection settings for both stacks:
-
-- Host: `127.0.0.1`
-- Port: `5433` for `docker-compose.local`, `5432` for `docker-compose.dev` by default
-- User: `postgres`
-- Database: `sem`
-- Password: `DB_PASSWORD` from `deploy/.env`
-
-Examples:
+Run from the **repository root** so Compose's default project directory is `deploy/` and `deploy/.env` is loaded:
 
 ```bash
-# Local stack
-psql -h 127.0.0.1 -p 5433 -U postgres -d sem
-
-# On the dev host itself
-psql -h 127.0.0.1 -p 5432 -U postgres -d sem
-
-# From your machine through an SSH tunnel to the dev host
-ssh -L 5432:127.0.0.1:5432 <user>@<dev-host>
-psql -h 127.0.0.1 -p 5432 -U postgres -d sem
+docker compose -f deploy/docker-compose.local.yml up --build
 ```
 
-Operational caveat: if another service already binds host port `5432` on the dev machine, the Postgres container will fail to start. If you need a temporary non-default host port on a specific machine, use a local Compose override instead of changing the shared dev file. For example, create an uncommitted `deploy/docker-compose.dev.override.yml` with:
+### Postgres host port
+
+PostGIS is reachable on **127.0.0.1:5433** on your machine (host port only; the container still uses `5432` internally). Connect with user `postgres`, database `sem`, and `DB_PASSWORD` from `deploy/.env`:
+
+```bash
+psql -h 127.0.0.1 -p 5433 -U postgres -d sem
+```
+
+If port `5433` is taken, create an uncommitted `deploy/docker-compose.override.yml` with a different host port:
 
 ```yaml
 services:
@@ -50,28 +31,17 @@ services:
       - "127.0.0.1:55432:5432"
 ```
 
-Then start with:
+## Nginx
 
-```bash
-docker compose -f deploy/docker-compose.dev.yml -f deploy/docker-compose.dev.override.yml up -d
-```
-
-## Nginx: local vs server
-
-| File | Used by | Purpose |
-|------|---------|---------|
-| [`nginx/nginx.local.conf`](../nginx/nginx.local.conf) | [`deploy/docker-compose.local.yml`](../deploy/docker-compose.local.yml) | HTTP only (port 80), for **local** Docker. Keep this minimal so `docker compose … up` works without TLS. |
-| [`nginx/nginx.dev.conf`](../nginx/nginx.dev.conf) | [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml) | HTTPS (443), HTTP→HTTPS redirect; same `/api/`, `/api/docs/`, and `/` routing. Mount expects TLS files under **`certs/`** at the repo root (see below). |
-
-Track **both** files in git: local and droplet stay reproducible; secrets stay off-repo.
+[`nginx/nginx.local.conf`](../nginx/nginx.local.conf) is used by the local compose file: HTTP only (port 80), routing `/api/`, `/api/docs/`, and `/`.
 
 ## API documentation
 
-This section covers **OpenAPI 3.x YAML** specs and the **Swagger UI** used to browse them interactively. This keeps the Go API binary free of documentation routes: **nginx** serves the documentation files in the **local Docker Compose** and **dev droplet** stacks.
+This section covers **OpenAPI 3.x YAML** specs and the **Swagger UI** used to browse them interactively. This keeps the Go API binary free of documentation routes: **nginx** serves the documentation files in the **local Docker Compose** stack.
 
 ### How it works
 
-1. **Local Compose** and the **dev droplet Compose** bind-mount **only** [`docs/openapi/`](../docs/openapi/) and [`docs/swagger-ui/`](../docs/swagger-ui/) into the nginx container (read-only). Other repo folders under `docs/` (for example `db/`, `design/`) are **not** mounted, so they cannot be served or enumerated by nginx.
+1. **Local Compose** bind-mounts **only** [`docs/openapi/`](../docs/openapi/) and [`docs/swagger-ui/`](../docs/swagger-ui/) into the nginx container (read-only). Other repo folders under `docs/` (for example `db/`, `design/`) are **not** mounted, so they cannot be served or enumerated by nginx.
 2. **Nginx** exposes:
    - **`/api/docs/`** — Swagger UI (HTML + vendored Swagger UI JS/CSS under [`docs/swagger-ui/`](../docs/swagger-ui/)).
    - **`/api/docs/openapi/`** — Raw OpenAPI files (e.g. [`docs/openapi/auth.yaml`](../docs/openapi/auth.yaml)).
@@ -81,10 +51,9 @@ Swagger UI assets are **vendored** in git (see [`docs/swagger-ui/vendor/README.m
 
 ### URLs
 
-| Environment | Swagger UI | Example spec URL |
-|-------------|------------|------------------|
+| Stack | Swagger UI | Example spec URL |
+|-------|------------|------------------|
 | **Local** (`docker-compose.local`) | `http://localhost/api/docs/` | `http://localhost/api/docs/openapi/auth.yaml` |
-| **Dev droplet** (HTTPS) | `https://socialeventmapper.com/api/docs/` | `https://socialeventmapper.com/api/docs/openapi/auth.yaml` |
 
 `/api/docs` without a trailing slash redirects to `/api/docs/`.
 
@@ -100,42 +69,9 @@ To add another API:
 
 OpenAPI `servers` in each YAML should match how clients call the API (this repo uses `url: /api` for same-origin requests from the browser).
 
-On the droplet, create a `certs/` directory next to `deploy/` and `nginx/` with your real certificate files (e.g. `fullchain.pem`, `privkey.pem` — names must match [`nginx/nginx.dev.conf`](../nginx/nginx.dev.conf) or edit that file to match your paths). **Never commit** keys or certs.
-
-## Suggested layout on the droplet
-
-Mirror the repo (compose under `deploy/`, nginx at repo root). Example: `/opt/sem/`:
-
-```text
-/opt/sem/
-├── deploy/
-│   ├── docker-compose.local.yml  # optional on server; dev uses docker-compose.dev.yml
-│   ├── docker-compose.dev.yml
-│   └── .env                      # generated by CI from GitHub Secrets (not committed)
-├── nginx/
-│   ├── nginx.local.conf          # local stack; compose.dev mounts nginx.dev.conf
-│   └── nginx.dev.conf           # TLS config used on the droplet
-├── certs/                        # on server only: fullchain.pem, privkey.pem (not in git)
-```
-
-Do not rely on editing `deploy/.env` by hand in production; the deploy pipeline should **write `deploy/.env` from GitHub** each time so credentials stay in one place.
-
-## First deploy ops checklist
-
-Before the first successful remote deploy, make sure the droplet already satisfies these prerequisites:
-
-- DNS for `socialeventmapper.com` and `www.socialeventmapper.com` points to the dev droplet.
-- Ports `80` and `443` are reachable on the droplet.
-- TLS certificate files exist at `/opt/sem/certs/cert.pem` and `/opt/sem/certs/key.pem`.
-- The `server_name` entries in [`nginx/nginx.dev.conf`](../nginx/nginx.dev.conf) match the domain you actually use.
-- The compose + nginx layout on the server matches the documented `/opt/sem/{deploy,nginx,certs}` structure.
-- Docker Engine and `docker compose` are installed on the droplet and available to `SSH_USERNAME`.
-
-These checks matter because the deploy workflow now performs HTTPS smoke tests through nginx after each deployment. If the domain/certificate layout is not ready, the deployment should fail instead of reporting a false-green result.
-
 ## Environment variables (app contract)
 
-[`deploy/.env.example`](../deploy/.env.example) lists the Compose secrets. Non-secret values such as Postgres user/database live directly in the compose files, and backend runtime defaults live in `backend/config/application.*.yaml`.
+[`deploy/.env.example`](../deploy/.env.example) lists the Compose variables. Non-secret values such as Postgres user/database live directly in the compose files, and backend runtime defaults live in `backend/config/application.<APP_ENV>.yaml`.
 
 These names still matter at runtime:
 
@@ -151,76 +87,9 @@ These names still matter at runtime:
 | `SPACES_BUCKET` | Backend direct-upload signing + Spaces admin script |
 | `SPACES_CDN_BASE_URL` | Backend public image URLs returned to clients |
 | `SPACES_S3_REGION` | Backend Spaces SDK configuration + Spaces admin script |
-| `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64` | Backend FCM push delivery in dev/prod when `PUSH_PROVIDER=firebase` |
-| `DOCKERHUB_NAMESPACE` | `deploy/docker-compose.dev.yml` image names (set in `deploy/.env` or the shell/CI environment) |
-| `IMAGE_TAG` | Exact backend/frontend image tag used by `deploy/docker-compose.dev.yml` (defaults to `latest` when not set) |
+| `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64` | Backend FCM push delivery when `PUSH_PROVIDER=firebase` |
 
-`DOCKERHUB_NAMESPACE` is your Docker Hub user or organization; images are expected as:
 
-- `${DOCKERHUB_NAMESPACE}/sem-backend-dev:${IMAGE_TAG:-latest}`
-- `${DOCKERHUB_NAMESPACE}/sem-frontend-dev:${IMAGE_TAG:-latest}`
-
-## GitHub Secrets → server `deploy/.env`
-
-Store values in **GitHub Actions secrets** (or **Environment** secrets for `dev`, later `prod`). The deploy job should SSH to the droplet and **create or overwrite** `/opt/sem/deploy/.env` before `docker compose pull`.
-
-Example mapping (name secrets however you prefer; align with your workflow):
-
-| GitHub secret (example) | Line in `deploy/.env` |
-|-------------------------|----------------|
-| `DB_PASSWORD` | `DB_PASSWORD=...` |
-| `JWT_SECRET` | `JWT_SECRET=...` |
-| `NEW_RELIC_LICENSE_KEY` | `NEW_RELIC_LICENSE_KEY=...` |
-| `RESEND_CLIENT_API_KEY` | `RESEND_CLIENT_API_KEY=...` |
-| `SPACES_ACCESS_KEY` | `SPACES_ACCESS_KEY=...` |
-| `SPACES_SECRET_KEY` | `SPACES_SECRET_KEY=...` |
-| `SPACES_ENDPOINT` | `SPACES_ENDPOINT=...` |
-| `SPACES_BUCKET` | `SPACES_BUCKET=...` |
-| `SPACES_CDN_BASE_URL` | `SPACES_CDN_BASE_URL=...` |
-| `SPACES_S3_REGION` | `SPACES_S3_REGION=...` |
-| `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64` | `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64=...` |
-| `DOCKERHUB_NAMESPACE` | `DOCKERHUB_NAMESPACE=...` |
-| `IMAGE_TAG` | `IMAGE_TAG=...` |
-
-In **GitHub Actions**, pass secrets into a remote step (e.g. `appleboy/ssh-action` with `script`, or inline `ssh` with env vars exported from `${{ secrets.* }}`). On the **server**, the resulting file is plain key=value lines, for example:
-
-```bash
-# Resulting /opt/sem/deploy/.env (values come from GitHub Secrets at deploy time — not committed)
-DB_PASSWORD=...
-JWT_SECRET=...
-NEW_RELIC_LICENSE_KEY=...
-RESEND_CLIENT_API_KEY=...
-SPACES_ACCESS_KEY=...
-SPACES_SECRET_KEY=...
-SPACES_ENDPOINT=...
-SPACES_BUCKET=...
-SPACES_CDN_BASE_URL=...
-SPACES_S3_REGION=...
-FIREBASE_SERVICE_ACCOUNT_JSON_BASE64=...
-DOCKERHUB_NAMESPACE=...
-IMAGE_TAG=...
-```
-
-Use `printf`, `envsubst` on a small template in the repo, or your action’s `script` to write `deploy/.env`; escape values that contain `$` or newlines. **Never commit** real `deploy/.env` files.
-
-### Docker Hub pull on the droplet
-
-If images are private, log in once or per deploy:
-
-```bash
-echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-```
-
-Store `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (or access token) as GitHub secrets; use least privilege (read-only for pull).
-
-### Typical dev deploy commands (after `deploy/.env` exists)
-
-From `/opt/sem/` (or your chosen root that mirrors `deploy/` + `nginx/`):
-
-```bash
-docker compose -f deploy/docker-compose.dev.yml pull backend frontend
-docker compose -f deploy/docker-compose.dev.yml up -d --no-deps backend frontend
-```
 
 ## Spaces bucket setup
 
@@ -240,16 +109,3 @@ Recommended CORS configuration:
 - Exposed headers: `ETag`
 
 For the end-to-end client flow, examples, and troubleshooting notes, see [docs/backend/features/image-upload.md](backend/business-flows/image-upload.md).
-
-## CI/CD
-
-The **development droplet** is updated by **GitHub Actions CD on merges/pushes to `main`**, can be started manually via **`workflow_dispatch`**, and is also updated when a GitHub release is published. Until a separate production server exists, release-driven deploys target this same dev environment. Typical pipeline:
-
-1. Build and push `sem-backend-dev` and `sem-frontend-dev` images to Docker Hub (for example tags such as **`latest`** plus an immutable tag per commit).
-2. SSH to the dev droplet, write `/opt/sem/deploy/.env` from **GitHub Actions secrets** (optionally scoped with a **GitHub Environment** named `dev` if you use environment protection rules), `docker login` if images are private, pull only the application images, verify Postgres health without unnecessarily restarting it, update the app services against [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml), and finally run backend/frontend plus ingress smoke checks.
-
-Image tag strategy for this repo: **`latest`** (rolling) plus a **commit-SHA** (or similar) tag for traceability, unless you introduce semver later.
-
-## Future: production compose
-
-When the production droplet exists, add a **third** compose file under `deploy/` (e.g. `deploy/docker-compose.prod.yml`) alongside the same nginx/Postgres patterns, pointing at the same or separate Docker Hub repositories, and add a **separate** workflow from the dev droplet pipeline—for example **release tags**, a **dedicated branch**, **manual `workflow_dispatch`**, or **Environment `prod`** with approvals—so production deploys are explicit and not confused with the shared dev server. Until then, only [`deploy/docker-compose.local.yml`](../deploy/docker-compose.local.yml) (local) and [`deploy/docker-compose.dev.yml`](../deploy/docker-compose.dev.yml) (dev server) are defined in this repository.

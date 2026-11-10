@@ -297,7 +297,7 @@ def main() -> None:
             {
                 "key": "protocol",
                 "value": "https",
-                "description": "Local dev example: http",
+                "description": "Local example: http",
             },
             {
                 "key": "base_host",

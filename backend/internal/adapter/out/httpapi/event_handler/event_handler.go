@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/invitation"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/invitation"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // EventHandler groups HTTP handlers that delegate to the event use-case port.
@@ -547,8 +547,7 @@ func toUpdateEventInput(body []byte) (event.UpdateEventInput, map[string]string)
 			if err := json.Unmarshal(value, &points); err != nil {
 				errs["route_points"] = "route_points must be an array"
 			} else {
-				converted := toRoutePointInputs(points)
-				input.RoutePoints = &converted
+				input.RoutePoints = new(toRoutePointInputs(points))
 			}
 		}
 	}
@@ -593,8 +592,7 @@ func toUpdateEventInput(body []byte) (event.UpdateEventInput, map[string]string)
 			if err := json.Unmarshal(value, &constraints); err != nil {
 				errs["constraints"] = "constraints must be an array"
 			} else {
-				converted := toConstraintInputs(constraints)
-				input.Constraints = &converted
+				input.Constraints = new(toConstraintInputs(constraints))
 			}
 		}
 	}

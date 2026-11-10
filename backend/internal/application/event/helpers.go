@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // toCreateEventResult maps the created domain.Event to the API response shape.
@@ -165,8 +165,7 @@ func toEventDetailResult(record *EventDetailRecord, now time.Time) *GetEventDeta
 		}
 	}
 	if record.PreferredGender != nil {
-		preferredGender := string(*record.PreferredGender)
-		result.PreferredGender = &preferredGender
+		result.PreferredGender = new(string(*record.PreferredGender))
 	}
 	result.ChildFriendly = record.ChildFriendly
 	result.FamilyOriented = record.FamilyOriented

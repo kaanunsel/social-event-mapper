@@ -103,8 +103,7 @@ func (u User) Summary() UserSummary {
 		Gender:        u.Gender,
 	}
 	if u.BirthDate != nil {
-		formatted := u.BirthDate.Format("2006-01-02")
-		s.BirthDate = &formatted
+		s.BirthDate = new(u.BirthDate.Format("2006-01-02"))
 	}
 	return s
 }

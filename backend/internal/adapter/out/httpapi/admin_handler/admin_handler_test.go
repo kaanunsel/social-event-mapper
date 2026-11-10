@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/admin"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/admin"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type stubAdminService struct {

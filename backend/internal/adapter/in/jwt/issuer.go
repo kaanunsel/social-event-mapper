@@ -3,8 +3,8 @@ package jwt
 import (
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	gojwt "github.com/golang-jwt/jwt/v5"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Issuer implements auth.TokenIssuer using HS256 JWT.

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	authapp "github.com/bounswe/bounswe2026group11/backend/internal/application/auth"
-	emailapp "github.com/bounswe/bounswe2026group11/backend/internal/application/email"
+	authapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/auth"
+	emailapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/email"
 )
 
 func TestAuthOTPMailerSendRegistrationOTPBuildsLightweightTemplate(t *testing.T) {

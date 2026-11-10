@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bounswe/bounswe2026group11/backend/tests_integration/common"
+	"github.com/kaanunsel/social-event-mapper/backend/tests_integration/common"
 )
 
 func TestMain(m *testing.M) {

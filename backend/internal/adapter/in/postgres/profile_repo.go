@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	imageuploadapp "github.com/bounswe/bounswe2026group11/backend/internal/application/imageupload"
-	profileapp "github.com/bounswe/bounswe2026group11/backend/internal/application/profile"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	imageuploadapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/imageupload"
+	profileapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/profile"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // ProfileRepository is the Postgres-backed implementation of profile.Repository.

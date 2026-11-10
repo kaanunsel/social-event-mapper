@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 type discoverEventsFingerprintPayload struct {
@@ -44,12 +44,10 @@ func buildDiscoverEventsFilterFingerprint(params DiscoverEventsParams) (string, 
 		OnlyFamilyOriented: params.OnlyFamilyOriented,
 	}
 	if params.StartFrom != nil {
-		value := params.StartFrom.UTC().Format(timeLayoutCursor)
-		payload.StartFrom = &value
+		payload.StartFrom = new(params.StartFrom.UTC().Format(timeLayoutCursor))
 	}
 	if params.StartTo != nil {
-		value := params.StartTo.UTC().Format(timeLayoutCursor)
-		payload.StartTo = &value
+		payload.StartTo = new(params.StartTo.UTC().Format(timeLayoutCursor))
 	}
 
 	raw, err := json.Marshal(payload)

@@ -3,11 +3,11 @@ package favorite_location_handler
 import (
 	"log/slog"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	favoritelocationapp "github.com/bounswe/bounswe2026group11/backend/internal/application/favorite_location"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	favoritelocationapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/favorite_location"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Handler groups HTTP handlers that delegate to the favorite-location use case.

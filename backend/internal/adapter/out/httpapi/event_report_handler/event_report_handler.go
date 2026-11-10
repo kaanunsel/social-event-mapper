@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	eventreportapp "github.com/bounswe/bounswe2026group11/backend/internal/application/eventreport"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	eventreportapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/eventreport"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Handler groups HTTP handlers for event reports.

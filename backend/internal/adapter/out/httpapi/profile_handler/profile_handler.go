@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/out/httpapi"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/invitation"
-	"github.com/bounswe/bounswe2026group11/backend/internal/application/profile"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/out/httpapi"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/invitation"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/application/profile"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // ProfileHandler groups HTTP handlers that delegate to the profile use-case port.

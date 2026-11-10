@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // ErrEventNotCancelable is returned by Repository.CancelEvent when the event is not in ACTIVE status.

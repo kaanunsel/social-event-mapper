@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/adapter/in/hasher"
-	authapp "github.com/bounswe/bounswe2026group11/backend/internal/application/auth"
-	eventapp "github.com/bounswe/bounswe2026group11/backend/internal/application/event"
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
 	"github.com/google/uuid"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/hasher"
+	authapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/auth"
+	eventapp "github.com/kaanunsel/social-event-mapper/backend/internal/application/event"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // UserOption customizes a user fixture before it is persisted.

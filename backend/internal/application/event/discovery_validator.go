@@ -6,7 +6,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 const (
@@ -203,8 +203,7 @@ func normalizeTime(value *time.Time) *time.Time {
 		return nil
 	}
 
-	utc := value.UTC()
-	return &utc
+	return new(value.UTC())
 }
 
 func buildPrefixTSQuery(query string) string {

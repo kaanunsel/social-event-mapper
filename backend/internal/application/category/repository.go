@@ -3,7 +3,7 @@ package category
 import (
 	"context"
 
-	"github.com/bounswe/bounswe2026group11/backend/internal/domain"
+	"github.com/kaanunsel/social-event-mapper/backend/internal/domain"
 )
 
 // Repository is the application-layer persistence port for category flows.

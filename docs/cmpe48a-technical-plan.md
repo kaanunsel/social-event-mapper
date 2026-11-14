@@ -4,27 +4,28 @@ This plan describes implementation following Phase 1. Sizes, schedules and examp
 
 ## Architecture and resource ownership
 
-Terraform will provision GCP resources in us-central1. Kubernetes manifests will define workloads and routing. The GKE Gateway controller will own the load balancer configuration generated from Gateway and HTTPRoute resources. The test control service will own temporary Locust instances created from a Terraform-managed instance template.
+Terraform will provision GCP resources in europe-north2 (Stockholm). Cloud Scheduler jobs use europe-west1 (Belgium), invoking authenticated HTTPS functions in Stockholm; Scheduler does not currently support Stockholm. Kubernetes manifests will define workloads and routing. The GKE Gateway controller will own the load balancer configuration generated from Gateway and HTTPRoute resources. The test control service will own temporary Locust instances created from a Terraform-managed instance template.
 
 | Component | Deployment | Initial capacity |
 |---|---|---|
+| GKE Standard node pool | Zonal `europe-north2-a` private node pool | `e2-medium` (2 shared vCPUs, 4 GiB RAM), 20 GiB balanced PD boot disk, Cluster Autoscaler 2–4 nodes (1–3 without monitoring) |
 | React web | GKE Deployment | 0.25 vCPU, 0.5 GiB, HPA 1–3 |
 | Go API | GKE Deployment | 0.5 vCPU, 1 GiB, HPA 1–4 |
 | Grafana | GKE Deployment | One replica, 0.25 vCPU, 1 GiB, 10 GiB PVC |
 | Test controller | GKE Deployment | One replica, 0.25 vCPU, 0.5 GiB |
 | OTel Collector | GKE Deployment | One replica, 0.25 vCPU, 0.5 GiB |
-| PostGIS VM | Compute Engine | e2-medium, private IP, 30 GiB total disk |
+| PostGIS VM | Compute Engine | e2-medium, private IP, 15 GiB total balanced boot disk (OS, data and WAL) |
 | Locust VM | Temporary Compute Engine instance | e2-medium, 10 GiB disk, ephemeral external IPv4 |
 | Lifecycle function | Cloud Functions 2nd gen | Every minute, minimum instances zero |
 | Cleanup function | Cloud Functions 2nd gen | Daily, minimum instances zero |
 
-Every baseline pod requests 1 GiB ephemeral storage. Grafana uses a single-writer volume and recreate rollout strategy. Dashboard JSON and data-source configuration live in version control. Initial CPU-based HPA targets will be tuned with measurements. Record resources actually admitted by Autopilot and revise estimates accordingly.
+The GKE cluster uses Standard mode rather than Autopilot so node pool sizing, machine types, boot disks and Cluster Autoscaler policies remain under explicit operator and Terraform control. Each `e2-medium` worker node is configured with a 20 GiB balanced persistent boot disk (`COS_CONTAINERD`) instead of the 100 GiB GKE default. Grafana uses a single-writer volume and recreate rollout strategy. Dashboard JSON and data-source configuration live in version control. Initial CPU-based HPA targets will be tuned with measurements. Verify kubelet allocatable capacity and node utilization on the `e2-medium` pool and revise requests if needed.
 
 ```mermaid
 flowchart TB
     User["Browser or mobile"] --> LB["Public HTTPS load balancer"]
     subgraph VPC["Project VPC"]
-        subgraph GKE["GKE Autopilot · private nodes"]
+        subgraph GKE["GKE Standard · Stockholm (europe-north2-a) · private e2-medium node pool"]
             Gateway["Gateway and HTTPRoute"]
             Web["Web pods"]
             API["API pods"]
@@ -48,7 +49,7 @@ flowchart TB
     LB -->|"app host /api"| API
     LB -->|monitoring host| Grafana
     LB -->|tests host| Control
-    Scheduler["Cloud Scheduler"] --> Functions["Lifecycle and cleanup functions"]
+    Scheduler["Cloud Scheduler · Belgium"] --> Functions["Lifecycle and cleanup functions"]
     Functions -->|Direct VPC egress| DB
     Collector --> Obs["Cloud Monitoring and Logging"]
     Grafana -->|Query| Obs
@@ -96,9 +97,9 @@ Allocate non-overlapping subnet, pod and Service ranges. Enable Private Google A
 
 ## Egress decision and repository evidence
 
-Reviewed on 12 November 2026. Autopilot defaults to public networking. Public-node Autopilot instances have external IP addresses and support internet egress through node masquerading. Pod IPs remain drawn from the pod address range. Enabling private nodes removes node external IPs. Control-plane endpoint access is a separate setting. [Autopilot overview](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) · [Public Autopilot node IPs](https://docs.cloud.google.com/kubernetes-engine/docs/troubleshooting/cluster-creation) · [IP masquerading](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/ip-masquerade-agent)
+Reviewed on 15 November 2026. GKE Standard clusters default to public worker node IPs unless private nodes (`enable_private_nodes = true`) are configured on the cluster. Public-node Standard instances have external IP addresses and support internet egress through node IP masquerading, while pod IPs remain drawn from the VPC-native pod address range. Enabling private nodes removes external IPs from worker nodes. Control-plane endpoint access is configured separately. [GKE cluster types](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters) · [GKE private clusters](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/private-clusters) · [IP masquerading](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/ip-masquerade-agent)
 
-The confirmed network decision enables private GKE nodes and keeps the database VM private. For this choice, Cloud NAT provides the general internet egress required by database package bootstrap/updates and any enabled Resend delivery. Media storage will use GCS and eligible Google API routing. Public-node Autopilot can run general internet backend calls without Cloud NAT. It would still leave the private database's package installation and updates to solve, through database-only NAT, a prepared image/package mirror or external-IP provisioning. The current estimate retains one shared NAT gateway and makes its private-node assumption explicit.
+The confirmed network decision enables private GKE Standard worker nodes and keeps the database VM private. For this choice, Cloud NAT provides the general internet egress required by database package bootstrap/updates and any enabled Resend delivery. Media storage will use GCS and eligible Google API routing. Public-node GKE Standard could run general internet backend calls without Cloud NAT, but would still leave the private database's package installation and updates to solve through database-only NAT, a prepared image/package mirror or external-IP provisioning. The current estimate retains one shared NAT gateway and makes its private-node assumption explicit.
 
 | Call or dependency | Execution location and evidence | Network implication |
 |---|---|---|
@@ -115,9 +116,9 @@ The confirmed network decision enables private GKE nodes and keeps the database 
 
 The review uses tracked source and example configuration. Enabled providers in a future GCP environment will be selected at deployment. Calls to arbitrary Resend or Debian endpoints cannot be covered by Private Google Access alone. Google documents Debian images using the Debian CDN for APT packages. [Google API private access](https://docs.cloud.google.com/vpc/docs/private-google-access) · [Compute Engine OS repositories](https://docs.cloud.google.com/compute/docs/images/os-details)
 
-Configure a default internet route, outbound firewall rules and Cloud NAT coverage for the private DB subnet and applicable GKE source ranges. Preserve default Autopilot masquerading unless a tested policy change requires different NAT coverage. Private DB traffic, LISTEN/NOTIFY and the load balancer's inbound path remain on their respective routes. Functions use private-ranges-only VPC egress, and the public-IP runner uses its own outbound path.
+Configure a default internet route, outbound firewall rules and Cloud NAT coverage for the private DB subnet and applicable GKE subnet/pod source ranges. Preserve default GKE IP masquerading unless a tested policy change requires different NAT coverage. Private DB traffic, LISTEN/NOTIFY and the load balancer's inbound path remain on their respective routes. Functions use private-ranges-only VPC egress, and the public-IP runner uses its own outbound path.
 
-During implementation, verify actual node external-IP settings, DNS, GCS metadata/signing requests, an enabled email-provider call, Google API access, database package downloads and runner access to the public application URL. Check NAT metrics and admitted node count before revising the four-node/VM cost allowance. This source review establishes the proposed configuration; deployment connectivity remains to be tested.
+During implementation, verify actual node external-IP settings, DNS, GCS metadata/signing requests, an enabled email-provider call, Google API access, database package downloads and runner access to the public application URL. Check NAT metrics and active GKE Standard node count before revising the four-node/VM cost allowance. This source review establishes the proposed configuration; deployment connectivity remains to be tested.
 
 ## Identity and provisioning
 
@@ -241,12 +242,14 @@ Proposed directories are infra/terraform/, deploy/kubernetes/, observability/gra
 
 ## Cost and optional capacity
 
-The main estimate is $33.00 for 7 days and $138.45 for 30 days with available GKE management credit, or $49.80/$210.45 without it. These are alternative windows. All deployment periods consume the same remaining trial budget.
+The full architecture costs approximately $31.20/$131.08 for 7/30 days with available GKE management credit, or $48.00/$203.08 before it. Application-only operation costs $21.66/$91.97 with the credit, or $38.46/$163.97 before it. The monitoring/load-test increment is $9.54/$39.11. This comparison uses one baseline `e2-medium` GKE Standard worker node (plus a 20 GiB balanced PD boot disk) for the application-only scenario, and adds a second baseline `e2-medium` node (plus 20 GiB boot disk) for Grafana, the OTel Collector and the test controller, along with Grafana's 10 GiB PVC, up to two burst `e2-medium` nodes added by Cluster Autoscaler during load tests, the Locust VM and extra test/telemetry usage. Native GCP telemetry, HPA and Cluster Autoscaler remain enabled. The full architecture remains planned.
 
-The model uses 168/720 deployment hours and 8/24 test hours. Autopilot rates are $0.0445 per requested vCPU-hour, $0.0049225 per GiB-hour and $0.0001389 per ephemeral GiB-hour. Balanced disk costs $0.000136986 per GiB-hour. Application media adds 10 GiB regional Standard GCS at $0.000027397 per GiB-hour, or $0.05/$0.20. Operations and image-delivery traffic use the variable allowance. NAT uses ($0.0014 × 4 + $0.005) per hour, with actual Autopilot node count to verify.
+Use 168/720 deployment hours and 8/24 test hours. Stockholm (`europe-north2`) rates: Compute Engine `e2-medium` $0.035180998/hour; balanced disk $0.000136986/GiB-hour; regional Standard GCS $0.000031507/GiB-hour. NAT uses ($0.0014 × 4 + $0.005)/hour in both scenarios; verify actual GKE node count. Zonal GKE Standard cluster management is $0.10/hour ($16.80/$72.00) before eligible credit (up to $74.40/month). The report contains the itemized calculation.
 
-The $5/$20 variable allowance covers modest traffic, NAT/LB processing, telemetry, artifacts and builds. Measure volumes and cardinality during the first test. Function estimates assume three billable seconds per invocation at 1 vCPU and 0.5 GiB, zero minimum instances and available free allowances. Longer calls and retries increase consumption.
+The database VM has one 15 GiB balanced boot disk containing the OS, PostgreSQL data and WAL. Each GKE Standard worker node uses a 20 GiB balanced boot disk (explicitly configured in Terraform to avoid the 100 GiB GKE default). Disks are attached to their VMs but separately billed; this is not object storage or a second database service. Use a supported minimal OS image (`COS_CONTAINERD` on GKE nodes), bound local logs/WAL retention, alert on disk usage and expand disks before exhaustion. Configure deletion protection/retention and backups before loading valuable data. Images stay in GCS. Grafana retains its separate 10 GiB PVC; Locust has a 10 GiB boot disk deleted with each VM.
 
-Start with one DB VM. Add one read replica if measurements justify it and a second if necessary. Each adds approximately $6.32/$27.08 in VM and disk costs. Keep writes, freshness-sensitive reads and LISTEN/NOTIFY on the primary. Add explicit read pools and measure replication lag. Automated failover requires further design.
+Allow $3/$12 for application traffic, NAT/LB processing, builds and artifacts, plus $2/$8 for extra telemetry, load-test traffic and results. These are variable planning allowances. Measure volumes/cardinality and node utilization. Functions assume three billable seconds at 1 vCPU/0.5 GiB per invocation, zero minimum instances and available free allowances. Longer calls and retries increase consumption.
 
-Resolve demo usage of Maps, email and push before provisioning and account for enabled provider costs. Use existing domains where available. Verify remaining trial credit, IAM, quotas, selected plugin authentication and admitted resource requests during setup. [GKE pricing](https://cloud.google.com/kubernetes-engine/pricing) · [Disk pricing](https://cloud.google.com/compute/disks-image-pricing) · [NAT pricing](https://cloud.google.com/nat/pricing) · [Observability pricing](https://cloud.google.com/products/observability/pricing)
+Start with one DB VM. Add one read replica if measurements justify it and a second if necessary. Each e2-medium with a 15 GiB disk adds about $6.26/$26.81; two add $12.51/$53.62. Replication traffic, backups and failover are additional. Keep writes, freshness-sensitive reads and LISTEN/NOTIFY on the primary. Add explicit read pools and measure replication lag.
+
+Resolve demo usage of Maps, email and push before provisioning and account for enabled provider costs. Use existing domains where available. Verify remaining trial credit, IAM, quotas, selected plugin authentication and node pool allocatable capacity during setup. [GKE pricing](https://cloud.google.com/kubernetes-engine/pricing) · [Disk pricing](https://cloud.google.com/compute/disks-image-pricing) · [NAT pricing](https://cloud.google.com/nat/pricing) · [Observability pricing](https://cloud.google.com/products/observability/pricing)

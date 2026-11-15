@@ -40,11 +40,13 @@ func main() {
 	}
 	defer container.Close()
 
-	container.StartEventExpiryJob(ctx, 1*time.Minute)
-	if err := container.RunBadgeBackfill(ctx); err != nil {
-		slog.Error("badge backfill failed", "error", err)
+	if os.Getenv("DISABLE_BACKGROUND_JOBS") != "true" {
+		container.StartEventExpiryJob(ctx, 1*time.Minute)
+		if err := container.RunBadgeBackfill(ctx); err != nil {
+			slog.Error("badge backfill failed", "error", err)
+		}
+		container.StartNotificationRetentionJob(ctx, 24*time.Hour)
 	}
-	container.StartNotificationRetentionJob(ctx, 24*time.Hour)
 
 	app := server.NewHTTP(container)
 	addr := fmt.Sprintf(":%d", container.Config.AppPort)

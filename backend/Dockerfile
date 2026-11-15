@@ -16,7 +16,8 @@ COPY . .
 
 # CGO_ENABLED=0 produces a static binary that runs on Alpine (musl) without linking glibc.
 # -trimpath strips local paths from the binary; -s -w strip debug info to shrink size.
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server && \
+    CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/worker ./cmd/worker
 
 # --- Borrow only the official `migrate` binary; same version the entrypoint expects. ---
 FROM migrate/migrate:v4.18.2 AS migrate
@@ -32,6 +33,7 @@ RUN chmod +x /usr/local/bin/migrate
 WORKDIR /app
 
 COPY --from=builder /out/server /app/server
+COPY --from=builder /out/worker /app/worker
 COPY config /app/config
 COPY migrations /migrations
 COPY docker-entrypoint.sh /docker-entrypoint.sh

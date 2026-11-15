@@ -1,0 +1,101 @@
+name: Deploy Release to GCP
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: project-72f15835-9e20-4691-877
+  REGION: europe-north2
+  ZONE: europe-north2-a
+  CLUSTER_NAME: sem-gke
+  REGISTRY: europe-north2-docker.pkg.dev/project-72f15835-9e20-4691-877/sem-images
+  WIF_PROVIDER: projects/591134303236/locations/global/workloadIdentityPools/github-actions/providers/github-oidc
+  DEPLOYER_SA: sem-github-deployer@project-72f15835-9e20-4691-877.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    name: Build, Migrate, and Rolling Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Determine image tag
+        id: meta
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push API image
+        run: |
+          docker buildx build --platform linux/amd64 \
+            -t "${{ env.REGISTRY }}/api:${{ steps.meta.outputs.tag }}" \
+            -t "${{ env.REGISTRY }}/api:latest" \
+            --push backend/
+
+      - name: Build and push Web image
+        run: |
+          MAPS_KEY=$(gcloud secrets versions access latest --secret=sem-google-maps-web-api-key --project=${{ env.PROJECT_ID }})
+          docker buildx build --platform linux/amd64 \
+            -f deploy/web.Dockerfile \
+            --build-arg "VITE_GOOGLE_MAPS_WEB_API_KEY=${MAPS_KEY}" \
+            -t "${{ env.REGISTRY }}/web:${{ steps.meta.outputs.tag }}" \
+            -t "${{ env.REGISTRY }}/web:latest" \
+            --push .
+
+      - name: Build and push Test Controller image
+        run: |
+          docker buildx build --platform linux/amd64 \
+            -t "${{ env.REGISTRY }}/test-control:${{ steps.meta.outputs.tag }}" \
+            -t "${{ env.REGISTRY }}/test-control:latest" \
+            --push tools/test-control/
+
+      - name: Connect to GKE cluster
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.ZONE }}
+
+      - name: Run DB migrations before backend rollout
+        run: |
+          kubectl -n sem delete job sem-db-migrate --ignore-not-found
+          sed "s|${{ env.REGISTRY }}/api:latest|${{ env.REGISTRY }}/api:${{ steps.meta.outputs.tag }}|g" deploy/kubernetes/migrate-job.yaml | kubectl apply -f -
+          if ! kubectl -n sem wait --for=condition=complete job/sem-db-migrate --timeout=180s; then
+            echo "Migration job failed! Aborting deployment."
+            kubectl -n sem logs job/sem-db-migrate --tail=100 || true
+            exit 1
+          fi
+
+      - name: Rolling update GKE deployments
+        run: |
+          kubectl -n sem set image deployment/sem-api api="${{ env.REGISTRY }}/api:${{ steps.meta.outputs.tag }}"
+          kubectl -n sem set image deployment/sem-web web="${{ env.REGISTRY }}/web:${{ steps.meta.outputs.tag }}"
+          kubectl -n sem set image deployment/sem-test-controller test-controller="${{ env.REGISTRY }}/test-control:${{ steps.meta.outputs.tag }}"
+          kubectl -n sem rollout status deployment/sem-api --timeout=300s
+          kubectl -n sem rollout status deployment/sem-web --timeout=300s
+          kubectl -n sem rollout status deployment/sem-test-controller --timeout=300s
+
+      - name: Update Cloud Run worker service
+        run: |
+          gcloud run services update sem-worker \
+            --region="${{ env.REGION }}" \
+            --image="${{ env.REGISTRY }}/api:${{ steps.meta.outputs.tag }}" \
+            --quiet

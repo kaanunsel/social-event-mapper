@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	emailadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/email"
 	pushadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/firebasepush"
+	gcsadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/gcs"
 	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/hasher"
 	jwtadapter "github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/jwt"
 	"github.com/kaanunsel/social-event-mapper/backend/internal/adapter/in/otp"
@@ -106,7 +107,11 @@ func New(ctx context.Context) (*Container, error) {
 		db.Close()
 		return nil, fmt.Errorf("build mail provider: %w", err)
 	}
-	spacesStorage := buildSpacesStorage(cfg)
+	imageStorage, err := buildImageStorage(ctx, cfg)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("build image storage: %w", err)
+	}
 
 	translator, err := i18n.LoadFromFS(i18nlocales.FS, i18nlocales.Dir)
 	if err != nil {
@@ -159,7 +164,7 @@ func New(ctx context.Context) (*Container, error) {
 	container.CategoryService = newCategoryService(container)
 	container.ProfileService = newProfileService(container)
 	container.FavoriteLocationService = newFavoriteLocationService(container)
-	container.ImageUploadService = newImageUploadService(container, spacesStorage)
+	container.ImageUploadService = newImageUploadService(container, imageStorage)
 	if eventService, ok := container.EventService.(*event.Service); ok {
 		eventService.SetJoinRequestImageConfirmer(container.ImageUploadService)
 	}
@@ -290,14 +295,24 @@ func buildMailProvider(cfg *config.Config) (emailapp.Provider, error) {
 	}
 }
 
-func buildSpacesStorage(cfg *config.Config) *spacesadapter.Storage {
-	return spacesadapter.NewStorage(spacesadapter.Config{
-		AccessKey: cfg.SpacesAccessKey,
-		SecretKey: cfg.SpacesSecretKey,
-		Endpoint:  cfg.SpacesEndpoint,
-		Bucket:    cfg.SpacesBucket,
-		Region:    cfg.SpacesS3Region,
-	})
+func buildImageStorage(ctx context.Context, cfg *config.Config) (imageupload.Storage, error) {
+	switch cfg.StorageProvider {
+	case "", "spaces":
+		return spacesadapter.NewStorage(spacesadapter.Config{
+			AccessKey: cfg.SpacesAccessKey,
+			SecretKey: cfg.SpacesSecretKey,
+			Endpoint:  cfg.SpacesEndpoint,
+			Bucket:    cfg.SpacesBucket,
+			Region:    cfg.SpacesS3Region,
+		}), nil
+	case "gcs":
+		return gcsadapter.NewStorage(ctx, gcsadapter.Config{
+			Bucket:              cfg.GCSBucket,
+			ServiceAccountEmail: cfg.GCSServiceAccountEmail,
+		})
+	default:
+		return nil, fmt.Errorf("unsupported storage provider %q", cfg.StorageProvider)
+	}
 }
 
 func buildPushSender(ctx context.Context, cfg *config.Config) (notification.PushSender, error) {
@@ -391,7 +406,7 @@ func newNotificationService(ctx context.Context, c *Container) (notification.Use
 	return service, nil
 }
 
-func newImageUploadService(c *Container, storage *spacesadapter.Storage) imageupload.UseCase {
+func newImageUploadService(c *Container, storage imageupload.Storage) imageupload.UseCase {
 	return imageupload.NewService(
 		c.profileRepo,
 		c.eventRepo,

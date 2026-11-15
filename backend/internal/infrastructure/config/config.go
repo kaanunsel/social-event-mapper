@@ -52,6 +52,9 @@ type Config struct {
 	SpacesS3Region                   string
 	SpacesPresignTTL                 time.Duration
 	SpacesUploadCacheCtrl            string
+	StorageProvider                  string
+	GCSBucket                        string
+	GCSServiceAccountEmail           string
 	PushProvider                     string
 	FirebaseCredentialsFile          string
 	FirebaseServiceAccountJSONBase64 string
@@ -115,6 +118,9 @@ func Load() (*Config, error) {
 	bind("spaces_s3_region", "SPACES_S3_REGION")
 	bind("spaces_presign_ttl", "SPACES_PRESIGN_TTL")
 	bind("spaces_upload_cache_control", "SPACES_UPLOAD_CACHE_CONTROL")
+	bind("storage_provider", "STORAGE_PROVIDER")
+	bind("gcs_bucket", "GCS_BUCKET")
+	bind("gcs_service_account_email", "GCS_SERVICE_ACCOUNT_EMAIL")
 	bind("push_provider", "PUSH_PROVIDER")
 	bind("firebase_credentials_file", "FIREBASE_CREDENTIALS_FILE")
 	bind("firebase_service_account_json_base64", "FIREBASE_SERVICE_ACCOUNT_JSON_BASE64")
@@ -154,6 +160,9 @@ func Load() (*Config, error) {
 		SpacesS3Region:                   strings.TrimSpace(v.GetString("spaces_s3_region")),
 		SpacesPresignTTL:                 v.GetDuration("spaces_presign_ttl"),
 		SpacesUploadCacheCtrl:            strings.TrimSpace(v.GetString("spaces_upload_cache_control")),
+		StorageProvider:                  strings.ToLower(strings.TrimSpace(v.GetString("storage_provider"))),
+		GCSBucket:                        strings.TrimSpace(v.GetString("gcs_bucket")),
+		GCSServiceAccountEmail:           strings.TrimSpace(v.GetString("gcs_service_account_email")),
 		PushProvider:                     strings.TrimSpace(v.GetString("push_provider")),
 		FirebaseCredentialsFile:          strings.TrimSpace(v.GetString("firebase_credentials_file")),
 		FirebaseServiceAccountJSONBase64: strings.TrimSpace(v.GetString("firebase_service_account_json_base64")),
@@ -386,41 +395,59 @@ func validate(v *viper.Viper, c *Config) error {
 	if c.RatingBayesianM < 1 {
 		return fmt.Errorf("RATING_BAYESIAN_M must be at least 1")
 	}
-	if !v.IsSet("spaces_access_key") && c.SpacesAccessKey == "" {
-		return missing("SPACES_ACCESS_KEY")
+	if c.StorageProvider == "" {
+		c.StorageProvider = "spaces"
 	}
-	if c.SpacesAccessKey == "" {
-		return fmt.Errorf("SPACES_ACCESS_KEY is required and cannot be empty")
-	}
-	if !v.IsSet("spaces_secret_key") && c.SpacesSecretKey == "" {
-		return missing("SPACES_SECRET_KEY")
-	}
-	if c.SpacesSecretKey == "" {
-		return fmt.Errorf("SPACES_SECRET_KEY is required and cannot be empty")
-	}
-	if !v.IsSet("spaces_endpoint") && c.SpacesEndpoint == "" {
-		return missing("SPACES_ENDPOINT")
-	}
-	if c.SpacesEndpoint == "" {
-		return fmt.Errorf("SPACES_ENDPOINT is required and cannot be empty")
-	}
-	if !v.IsSet("spaces_bucket") && c.SpacesBucket == "" {
-		return missing("SPACES_BUCKET")
-	}
-	if c.SpacesBucket == "" {
-		return fmt.Errorf("SPACES_BUCKET is required and cannot be empty")
-	}
-	if !v.IsSet("spaces_cdn_base_url") && c.SpacesCDNBaseURL == "" {
-		return missing("SPACES_CDN_BASE_URL")
-	}
-	if c.SpacesCDNBaseURL == "" {
-		return fmt.Errorf("SPACES_CDN_BASE_URL is required and cannot be empty")
-	}
-	if !v.IsSet("spaces_s3_region") && c.SpacesS3Region == "" {
-		return missing("SPACES_S3_REGION")
-	}
-	if c.SpacesS3Region == "" {
-		return fmt.Errorf("SPACES_S3_REGION is required and cannot be empty")
+	switch c.StorageProvider {
+	case "spaces":
+		if !v.IsSet("spaces_access_key") && c.SpacesAccessKey == "" {
+			return missing("SPACES_ACCESS_KEY")
+		}
+		if c.SpacesAccessKey == "" {
+			return fmt.Errorf("SPACES_ACCESS_KEY is required and cannot be empty")
+		}
+		if !v.IsSet("spaces_secret_key") && c.SpacesSecretKey == "" {
+			return missing("SPACES_SECRET_KEY")
+		}
+		if c.SpacesSecretKey == "" {
+			return fmt.Errorf("SPACES_SECRET_KEY is required and cannot be empty")
+		}
+		if !v.IsSet("spaces_endpoint") && c.SpacesEndpoint == "" {
+			return missing("SPACES_ENDPOINT")
+		}
+		if c.SpacesEndpoint == "" {
+			return fmt.Errorf("SPACES_ENDPOINT is required and cannot be empty")
+		}
+		if !v.IsSet("spaces_bucket") && c.SpacesBucket == "" {
+			return missing("SPACES_BUCKET")
+		}
+		if c.SpacesBucket == "" {
+			return fmt.Errorf("SPACES_BUCKET is required and cannot be empty")
+		}
+		if !v.IsSet("spaces_cdn_base_url") && c.SpacesCDNBaseURL == "" {
+			return missing("SPACES_CDN_BASE_URL")
+		}
+		if c.SpacesCDNBaseURL == "" {
+			return fmt.Errorf("SPACES_CDN_BASE_URL is required and cannot be empty")
+		}
+		if !v.IsSet("spaces_s3_region") && c.SpacesS3Region == "" {
+			return missing("SPACES_S3_REGION")
+		}
+		if c.SpacesS3Region == "" {
+			return fmt.Errorf("SPACES_S3_REGION is required and cannot be empty")
+		}
+	case "gcs":
+		if c.GCSBucket == "" {
+			return fmt.Errorf("GCS_BUCKET is required when STORAGE_PROVIDER=gcs")
+		}
+		if c.GCSServiceAccountEmail == "" {
+			return fmt.Errorf("GCS_SERVICE_ACCOUNT_EMAIL is required when STORAGE_PROVIDER=gcs")
+		}
+		if c.SpacesCDNBaseURL == "" {
+			return fmt.Errorf("SPACES_CDN_BASE_URL is required when STORAGE_PROVIDER=gcs")
+		}
+	default:
+		return fmt.Errorf("STORAGE_PROVIDER must be one of: spaces, gcs")
 	}
 	if c.SpacesPresignTTL <= 0 {
 		return fmt.Errorf("SPACES_PRESIGN_TTL must be greater than zero")

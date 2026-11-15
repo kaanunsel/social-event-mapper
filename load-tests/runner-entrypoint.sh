@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+WORKDIR="/opt/sem-loadtest"
+mkdir -p "${WORKDIR}"
+cd "${WORKDIR}"
+
+exec > >(tee -a "${WORKDIR}/runner.log") 2>&1
+
 META_URL="http://metadata.google.internal/computeMetadata/v1/instance/attributes"
 meta() {
   curl -sf -H "Metadata-Flavor: Google" "${META_URL}/$1"
@@ -14,9 +20,54 @@ DURATION=$(meta duration)
 RESULTS_BUCKET=$(meta results-bucket)
 LOCUSTFILE_GCS=$(meta locustfile-gcs)
 
-WORKDIR="/opt/sem-loadtest"
-mkdir -p "${WORKDIR}"
-cd "${WORKDIR}"
+FINALIZED=0
+STOPPED_BY_USER=0
+EXIT_CODE=1
+
+upload_artifacts() {
+  for f in locust_stats.csv locust_stats_history.csv locust_failures.csv runner.log; do
+    if [ -f "${WORKDIR}/${f}" ]; then
+      gcloud storage cp "${WORKDIR}/${f}" "gs://${RESULTS_BUCKET}/runs/${RUN_ID}/${f}" || true
+    fi
+  done
+}
+
+update_manifest() {
+  local status="$1"
+  local exit_code="$2"
+  local py_bin="${WORKDIR}/venv/bin/python3"
+  if [ ! -x "${py_bin}" ]; then
+    return 0
+  fi
+  "${py_bin}" - <<PYEOF || true
+import json, datetime
+from google.cloud import storage
+
+client = storage.Client()
+bucket = client.bucket("${RESULTS_BUCKET}")
+blob = bucket.blob("runs/${RUN_ID}/manifest.json")
+data = json.loads(blob.download_as_text())
+data["status"] = "${status}"
+data["exit_code"] = ${exit_code}
+data["finished_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+blob.upload_from_string(json.dumps(data, indent=2), content_type="application/json")
+PYEOF
+}
+
+on_exit() {
+  local rc=$?
+  if [ "${FINALIZED}" -eq 0 ]; then
+    upload_artifacts
+    if [ "${STOPPED_BY_USER}" -eq 1 ]; then
+      update_manifest "STOPPED" "${rc}"
+    else
+      update_manifest "FAILED" "${rc}"
+    fi
+  fi
+}
+trap on_exit EXIT
+
+echo "[$(date -u +%FT%TZ)] Starting load test run=${RUN_ID} target=${TARGET_HOST} users=${USERS} rate=${SPAWN_RATE} duration=${DURATION}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
@@ -27,7 +78,7 @@ python3 -m venv "${WORKDIR}/venv"
 
 gcloud storage cp "${LOCUSTFILE_GCS}" "${WORKDIR}/locustfile.py"
 
-python3 - <<PYEOF
+"${WORKDIR}/venv/bin/python3" - <<PYEOF
 import json, datetime
 from google.cloud import storage
 
@@ -40,6 +91,8 @@ data["started_at"] = datetime.datetime.utcnow().isoformat() + "Z"
 blob.upload_from_string(json.dumps(data, indent=2), content_type="application/json")
 PYEOF
 
+echo "[$(date -u +%FT%TZ)] Launching Locust headless..."
+
 set +e
 "${WORKDIR}/venv/bin/locust" \
   -f "${WORKDIR}/locustfile.py" \
@@ -49,13 +102,12 @@ set +e
   -r "${SPAWN_RATE}" \
   -t "${DURATION}" \
   --csv="${WORKDIR}/locust" \
-  --logfile="${WORKDIR}/runner.log" \
   --stop-timeout=15 &
 LOCUST_PID=$!
 
 # Poll for STOPPING desired_state from controller
 while kill -0 "${LOCUST_PID}" 2>/dev/null; do
-  DESIRED=$(python3 - <<PYEOF
+  DESIRED=$("${WORKDIR}/venv/bin/python3" - <<PYEOF 2>/dev/null || echo "RUNNING"
 import json
 from google.cloud import storage
 client = storage.Client()
@@ -64,6 +116,8 @@ print(json.loads(blob.download_as_text()).get("desired_state", "RUNNING"))
 PYEOF
 )
   if [ "${DESIRED}" = "STOPPING" ]; then
+    echo "[$(date -u +%FT%TZ)] Stop requested by controller, sending SIGTERM to Locust..."
+    STOPPED_BY_USER=1
     kill -TERM "${LOCUST_PID}" || true
     break
   fi
@@ -74,22 +128,15 @@ wait "${LOCUST_PID}"
 EXIT_CODE=$?
 set -e
 
-for f in locust_stats.csv locust_stats_history.csv locust_failures.csv runner.log; do
-  if [ -f "${WORKDIR}/${f}" ]; then
-    gcloud storage cp "${WORKDIR}/${f}" "gs://${RESULTS_BUCKET}/runs/${RUN_ID}/${f}"
-  fi
-done
+echo "[$(date -u +%FT%TZ)] Locust exited with code ${EXIT_CODE} (stopped_by_user=${STOPPED_BY_USER})"
 
-python3 - <<PYEOF
-import json, datetime
-from google.cloud import storage
+upload_artifacts
 
-client = storage.Client()
-bucket = client.bucket("${RESULTS_BUCKET}")
-blob = bucket.blob("runs/${RUN_ID}/manifest.json")
-data = json.loads(blob.download_as_text())
-data["status"] = "SUCCEEDED" if ${EXIT_CODE} == 0 else "FAILED"
-data["exit_code"] = ${EXIT_CODE}
-data["finished_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-blob.upload_from_string(json.dumps(data, indent=2), content_type="application/json")
-PYEOF
+if [ "${STOPPED_BY_USER}" -eq 1 ]; then
+  update_manifest "STOPPED" "${EXIT_CODE}"
+elif [ "${EXIT_CODE}" -eq 0 ]; then
+  update_manifest "SUCCEEDED" "${EXIT_CODE}"
+else
+  update_manifest "FAILED" "${EXIT_CODE}"
+fi
+FINALIZED=1

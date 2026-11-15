@@ -22,3 +22,4 @@ This repository keeps agent instructions in versioned Markdown files so every AI
 - Do not silently introduce architectural drift. If a requested change would deepen an already weak structure, stop and propose a cleanup plan first.
 - When backend contracts change, update the documentation under `docs/openapi/` so frontend and mobile teams can implement without ambiguity.
 - Follow repository conventions documented in `docs/conventions.md`.
+- **Commits**: Commit changes after completing important or meaningful changes.

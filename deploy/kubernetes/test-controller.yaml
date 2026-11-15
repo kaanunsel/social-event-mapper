@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sem-test-controller
+  namespace: sem
+  labels:
+    app: sem-test-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sem-test-controller
+  template:
+    metadata:
+      labels:
+        app: sem-test-controller
+    spec:
+      serviceAccountName: sem-test-controller
+      containers:
+        - name: test-controller
+          image: europe-north2-docker.pkg.dev/project-72f15835-9e20-4691-877/sem-images/test-control:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: GCP_PROJECT_ID
+              value: "project-72f15835-9e20-4691-877"
+            - name: GCP_ZONE
+              value: "europe-north2-a"
+            - name: RESULTS_BUCKET
+              value: "sem-test-results-project-72f15835-9e20-4691-877"
+            - name: LOCUST_INSTANCE_TEMPLATE
+              value: "https://www.googleapis.com/compute/v1/projects/project-72f15835-9e20-4691-877/global/instanceTemplates/sem-locust-runner-20261115153511328000000001"
+            - name: TARGET_HOST
+              value: "https://app.socialeventmapper.com"
+            - name: CONTROLLER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sem-controller-secrets
+                  key: CONTROLLER_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sem-test-controller
+  namespace: sem
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: ClusterIP
+  selector:
+    app: sem-test-controller
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: sem-test-controller-healthcheck
+  namespace: sem
+spec:
+  default:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 8080
+        requestPath: /healthz
+  targetRef:
+    group: ""
+    kind: Service
+    name: sem-test-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sem-tests-route
+  namespace: sem
+spec:
+  parentRefs:
+    - name: sem-gateway
+  hostnames:
+    - "tests.socialeventmapper.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: sem-test-controller
+          port: 80

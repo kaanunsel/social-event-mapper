@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sem-grafana-dashboards-provider
+  namespace: sem
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'SEM Dashboards'
+        orgId: 1
+        folder: 'Social Event Mapper'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sem-grafana-dashboards
+  namespace: sem
+data:
+  sem-overview.json: |
+    {
+      "title": "Social Event Mapper — Cloud Overview",
+      "uid": "sem-overview",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "links": [
+        {
+          "title": "Test Control UI",
+          "type": "link",
+          "url": "https://tests.socialeventmapper.com",
+          "targetBlank": true
+        }
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "title": "GKE Pod CPU Usage (sem namespace)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "stackdriver", "uid": "" },
+          "targets": [
+            {
+              "queryType": "metrics",
+              "metricQuery": {
+                "projectName": "project-72f15835-9e20-4691-877",
+                "metricType": "kubernetes.io/container/cpu/core_usage_time",
+                "perSeriesAligner": "ALIGN_RATE",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "groupBys": ["resource.label.pod_name"],
+                "filters": ["resource.label.namespace_name", "=", "sem"]
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "GKE Pod Memory Usage (sem namespace)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "stackdriver", "uid": "" },
+          "targets": [
+            {
+              "queryType": "metrics",
+              "metricQuery": {
+                "projectName": "project-72f15835-9e20-4691-877",
+                "metricType": "kubernetes.io/container/memory/used_bytes",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "groupBys": ["resource.label.pod_name"],
+                "filters": ["resource.label.namespace_name", "=", "sem"]
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Load Balancer Request Count",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "stackdriver", "uid": "" },
+          "targets": [
+            {
+              "queryType": "metrics",
+              "metricQuery": {
+                "projectName": "project-72f15835-9e20-4691-877",
+                "metricType": "loadbalancing.googleapis.com/https/request_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "groupBys": ["metric.label.response_code_class"]
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "PostGIS VM CPU Utilization",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "stackdriver", "uid": "" },
+          "targets": [
+            {
+              "queryType": "metrics",
+              "metricQuery": {
+                "projectName": "project-72f15835-9e20-4691-877",
+                "metricType": "compute.googleapis.com/instance/cpu/utilization",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "crossSeriesReducer": "REDUCE_MEAN",
+                "groupBys": ["metric.label.instance_name"]
+              }
+            }
+          ]
+        }
+      ]
+    }

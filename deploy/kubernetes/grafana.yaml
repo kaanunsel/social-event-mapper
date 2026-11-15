@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sem-grafana-pvc
+  namespace: sem
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sem-grafana-datasources
+  namespace: sem
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Google Cloud Monitoring
+        type: stackdriver
+        access: proxy
+        isDefault: true
+        jsonData:
+          authenticationType: gce
+          defaultProject: project-72f15835-9e20-4691-877
+      - name: Google Cloud Logging
+        type: googlecloud-logging-datasource
+        access: proxy
+        jsonData:
+          authenticationType: gce
+          defaultProject: project-72f15835-9e20-4691-877
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sem-grafana
+  namespace: sem
+  labels:
+    app: sem-grafana
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sem-grafana
+  template:
+    metadata:
+      labels:
+        app: sem-grafana
+    spec:
+      serviceAccountName: sem-grafana
+      securityContext:
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.3.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: "googlecloud-logging-datasource"
+            - name: GF_SERVER_ROOT_URL
+              value: "https://monitoring.socialeventmapper.com"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: sem-grafana-pvc
+        - name: datasources
+          configMap:
+            name: sem-grafana-datasources
+        - name: dashboards-provider
+          configMap:
+            name: sem-grafana-dashboards-provider
+        - name: dashboards
+          configMap:
+            name: sem-grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sem-grafana
+  namespace: sem
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: ClusterIP
+  selector:
+    app: sem-grafana
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: sem-grafana-healthcheck
+  namespace: sem
+spec:
+  default:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 3000
+        requestPath: /api/health
+  targetRef:
+    group: ""
+    kind: Service
+    name: sem-grafana
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sem-monitoring-route
+  namespace: sem
+spec:
+  parentRefs:
+    - name: sem-gateway
+  hostnames:
+    - "monitoring.socialeventmapper.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: sem-grafana
+          port: 80

@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sem-db-migrate
+  namespace: sem
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: europe-north2-docker.pkg.dev/project-72f15835-9e20-4691-877/sem-images/api:latest
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              migrate -path /migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable" up
+          envFrom:
+            - configMapRef:
+                name: sem-api-config
+            - secretRef:
+                name: sem-app-secrets

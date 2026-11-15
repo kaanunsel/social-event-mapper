@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sem-otel-collector-config
+  namespace: sem
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+          grpc:
+            endpoint: 0.0.0.0:4317
+
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 512
+      resourcedetection:
+        detectors: [gcp]
+        timeout: 5s
+
+    exporters:
+      googlecloud:
+        project: project-72f15835-9e20-4691-877
+        log:
+          default_log_name: sem-api-otel
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resourcedetection, batch]
+          exporters: [googlecloud]
+        metrics:
+          receivers: [otlp]
+          processors: [resourcedetection, batch]
+          exporters: [googlecloud]
+        logs:
+          receivers: [otlp]
+          processors: [resourcedetection, batch]
+          exporters: [googlecloud]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sem-otel-collector
+  namespace: sem
+  labels:
+    app: sem-otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sem-otel-collector
+  template:
+    metadata:
+      labels:
+        app: sem-otel-collector
+    spec:
+      serviceAccountName: sem-otel-collector
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.114.0
+          args: ["--config=/etc/otel/otel-collector-config.yaml"]
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel
+      volumes:
+        - name: config
+          configMap:
+            name: sem-otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sem-otel-collector
+  namespace: sem
+spec:
+  type: ClusterIP
+  selector:
+    app: sem-otel-collector
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318

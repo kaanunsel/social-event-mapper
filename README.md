@@ -1,238 +1,144 @@
 # Social Event Mapper
 
-Social Event Mapper is a platform for discovering, creating, joining, moderating, and checking in to social events on a map.
+A platform for discovering, creating, joining, and checking in to social events on a map. One Go API serves a React web app and a React Native mobile app.
 
-The project ships three surfaces backed by one API:
+- **Live app:** https://socialeventmapper.com
+- **API docs (Swagger):** https://socialeventmapper.com/api/docs/
 
-- **Web app:** event discovery, event creation/management, profile flows, and admin backoffice.
-- **Mobile app:** map-first discovery, event participation, invitations, tickets, QR check-in, and profile flows.
-- **Backend API:** auth, event lifecycle, participation, private invitations, protected join requests, QR tickets, notifications, reports, badges, and admin moderation.
+## Cloud Architecture
 
-## Live Links
+The production stack runs on **Google Cloud** (`europe-north2`). All infrastructure is defined with Terraform in [`infra/terraform/`](infra/terraform/), and Kubernetes manifests live in [`deploy/kubernetes/`](deploy/kubernetes/).
 
-| Item | Link |
+```mermaid
+flowchart LR
+    users(["Web & Mobile Users"])
+    gh["GitHub Actions"]
+
+    subgraph gcp["Google Cloud (europe-north2)"]
+        lb["Gateway / HTTPS Load Balancer<br/>managed SSL"]
+
+        subgraph vpc["VPC (private, Cloud NAT)"]
+            subgraph gke["GKE cluster: sem-gke"]
+                web["sem-web<br/>React + NGINX (HPA)"]
+                api["sem-api<br/>Go / Fiber (HPA)"]
+                otel["OTel Collector"]
+                grafana["Grafana"]
+                ctrl["Test Controller"]
+            end
+            db[("PostgreSQL 16 + PostGIS<br/>Compute Engine VM")]
+            locust["Locust VMs<br/>(on demand)"]
+        end
+
+        sched["Cloud Scheduler"]
+        worker["Cloud Run<br/>sem-worker"]
+        gcs[("Cloud Storage<br/>media + test results")]
+        secrets["Secret Manager"]
+        ar["Artifact Registry"]
+        ops["Cloud Monitoring<br/>& Logging"]
+    end
+
+    users --> lb
+    lb -- "/" --> web
+    lb -- "/api" --> api
+    lb -- "monitoring.*" --> grafana
+    lb -- "tests.*" --> ctrl
+
+    api --> db
+    api --> gcs
+    sched -- "lifecycle (1 min)<br/>cleanup (daily)" --> worker
+    worker --> db
+
+    api --> otel --> ops
+    grafana --> ops
+    ctrl --> locust
+    locust --> lb
+    locust --> gcs
+
+    gh -- "Workload Identity" --> ar
+    ar --> gke
+    ar --> worker
+    secrets -.-> api
+    secrets -.-> worker
+```
+
+| Component | Role |
 |---|---|
-| Live web app | [https://socialeventmapper.com/](https://socialeventmapper.com/) |
-| Live Swagger / OpenAPI docs | [https://socialeventmapper.com/api/docs/](https://socialeventmapper.com/api/docs/) |
+| **Gateway API + Load Balancer** | Single HTTPS entry point. Routes `/` to the web app, `/api` to the API, plus `monitoring.` and `tests.` subdomains. |
+| **GKE (`sem-gke`)** | Runs the web app, API, Grafana, OTel Collector, and load-test controller. API and web scale with HPA; nodes scale with Cluster Autoscaler. |
+| **Database VM** | PostgreSQL 16 + PostGIS on a private Compute Engine VM. Reachable only inside the VPC. |
+| **Cloud Run + Cloud Scheduler** | `sem-worker` runs background jobs: event lifecycle updates every minute and notification cleanup every night. |
+| **Cloud Storage** | Event/profile images and load-test results. |
+| **Secret Manager** | DB password, JWT secret, and API keys. |
+| **Observability** | OpenTelemetry → Cloud Monitoring/Logging, visualized in Grafana. |
+| **Load testing** | Test controller starts temporary Locust VMs and stores results in GCS. |
+
+**Deployments:** pushing a `v*` tag triggers [`deploy-release.yml`](.github/workflows/deploy-release.yml). It builds images, pushes them to Artifact Registry, runs DB migrations, and then does a rolling update. If migrations fail, nothing is deployed. See [`docs/gcp-operations.md`](docs/gcp-operations.md) for pause/resume and secret access.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backend | Go 1.26, Fiber, PostgreSQL 16 + PostGIS, golang-migrate, OpenAPI 3.1 |
-| Web | React 19, TypeScript, Vite, React Router, Google Maps |
-| Mobile | React Native, Expo SDK 55, Expo Router, React Native Maps |
-| Runtime | Docker Compose, NGINX reverse proxy, Swagger UI |
-| CI/CD | GitHub Actions, release APK workflow |
+| Backend | Go, Fiber, PostgreSQL 16 + PostGIS, golang-migrate, OpenAPI 3.1 |
+| Web | React 19, TypeScript, Vite, Google Maps |
+| Mobile | React Native, Expo, React Native Maps |
+| Infra | GCP, Terraform, GKE, Cloud Run, Docker, NGINX |
+| CI/CD | GitHub Actions |
 
 ## Repository Layout
 
-| Path | Role |
+| Path | Contents |
 |---|---|
-| [`backend/`](backend/) | Go API, domain/application layers, adapters, migrations, backend tests |
-| [`frontend/`](frontend/) | React web app and admin backoffice |
-| [`mobile/`](mobile/) | Expo React Native app |
-| [`deploy/`](deploy/) | Local Docker Compose files and environment template |
-| [`nginx/`](nginx/) | Local and deployed NGINX reverse proxy configs |
-| [`docs/openapi/`](docs/openapi/) | OpenAPI specs served by Swagger UI |
-| [`docs/backend/`](docs/backend/) | Backend architecture and business-flow documentation |
-| [`docs/db/`](docs/db/) | Database schema and persistence documentation |
+| [`backend/`](backend/) | Go API, migrations, tests |
+| [`frontend/`](frontend/) | React web app and admin panel |
+| [`mobile/`](mobile/) | Expo mobile app |
+| [`infra/terraform/`](infra/terraform/) | GCP infrastructure |
+| [`deploy/`](deploy/) | Docker Compose (local) and Kubernetes manifests |
+| [`nginx/`](nginx/) | NGINX configs |
+| [`docs/`](docs/) | OpenAPI specs, architecture, database docs |
 
-## Quick Start: Local Docker
+## Run Locally
 
-Use this path if you want to run the whole web stack locally. It builds the backend and frontend from source, starts PostgreSQL/PostGIS, and serves everything through local NGINX.
-
-### Prerequisites
-
-- Docker Desktop or Docker Engine with Compose
-- Git
-- A Google Maps Web API key if you want the web map to render normally
-
-### 1. Create the local environment file
+Requires Docker with Compose.
 
 ```bash
-cp deploy/.env.example deploy/.env
-```
-
-For the minimum local boot, fill:
-
-```dotenv
-DB_PASSWORD=<local-postgres-password>
-JWT_SECRET=<local-jwt-secret>
-VITE_GOOGLE_MAPS_WEB_API_KEY=<google-maps-web-key>
-```
-
-Optional feature credentials:
-
-- `RESEND_CLIENT_API_KEY`: only needed if email delivery is changed from mock mode to Resend.
-- `SPACES_*`: needed for real direct image uploads.
-- `FIREBASE_SERVICE_ACCOUNT_JSON_BASE64` and `NEW_RELIC_LICENSE_KEY`: not needed for local compose; local push notifications use the mock provider.
-
-Do not commit `deploy/.env`.
-
-### 2. Start the local stack
-
-```bash
+cp deploy/.env.example deploy/.env   # set DB_PASSWORD, JWT_SECRET, VITE_GOOGLE_MAPS_WEB_API_KEY
 docker compose -f deploy/docker-compose.local.yml up --build
 ```
 
-Open:
+- Web app: http://localhost
+- API: http://localhost/api (health: `/api/health`)
+- Swagger UI: http://localhost/api/docs/
+- PostgreSQL: `127.0.0.1:5433`, database `sem`, user `postgres`
 
-- Web app: [http://localhost](http://localhost)
-- Backend health: [http://localhost/api/health](http://localhost/api/health)
-- Swagger UI: [http://localhost/api/docs/](http://localhost/api/docs/)
+Email and push notifications use mock providers locally. Use `down -v` to reset the database.
 
-Useful local details:
-
-- The API base URL is `http://localhost/api`.
-- PostgreSQL is exposed to the host at `127.0.0.1:5433`.
-- Database name is `sem`, user is `postgres`, password is `DB_PASSWORD`.
-- Local backend config uses mock email and mock push providers.
-- Migrations seed the canonical event categories and badges. A fresh database does not need a separate category seed script.
-
-Stop the stack with:
-
-```bash
-docker compose -f deploy/docker-compose.local.yml down
-```
-
-Remove local database state with:
-
-```bash
-docker compose -f deploy/docker-compose.local.yml down -v
-```
-
-## Local Accounts
-
-No default credentials are stored in this repository. For a fresh local database, create users through the registration flow. To test admin-only screens locally, create a user first, then promote it in the local database:
+**Admin user:** register normally, then promote the account and log in again:
 
 ```bash
 docker compose -f deploy/docker-compose.local.yml exec postgres \
-  psql -U postgres -d sem \
-  -c "UPDATE app_user SET role = 'ADMIN' WHERE email = '<admin-email@example.com>';"
+  psql -U postgres -d sem -c "UPDATE app_user SET role = 'ADMIN' WHERE email = '<email>';"
 ```
 
-Then log in again so the access token includes the updated `ADMIN` role.
-
-## Mobile App Against Local Docker
-
-The mobile app is developed from the `mobile/` directory.
+**Mobile app:**
 
 ```bash
-cd mobile
-npm install
-cp .env.example .env
-npx expo start
+cd mobile && npm install && cp .env.example .env && npx expo start
 ```
 
-API base URL behavior:
+Use `http://10.0.2.2/api` on the Android emulator. On a physical device, set `EXPO_PUBLIC_API_BASE_URL=http://<your-LAN-IP>/api` in `mobile/.env`.
 
-| Runtime | API base |
-|---|---|
-| iOS Simulator | `http://localhost/api` |
-| Android Emulator | `http://10.0.2.2/api` |
-| Physical phone with Expo Go | Set `EXPO_PUBLIC_API_BASE_URL=http://<your-computer-LAN-IP>/api` in `mobile/.env` |
-
-For Android map rendering, set:
-
-```dotenv
-EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY=<google-maps-android-key>
-```
-
-Restart Metro after editing `mobile/.env`.
-
-## Web App Outside Docker
-
-The recommended local path is Docker Compose. If you need to run only the web app during development:
+## Tests
 
 ```bash
-cd frontend
-npm install
-cp .env.example .env.local
-npm run dev
+cd backend  && ./shipcheck.sh            # SKIP_INTEGRATION=1 if Docker is unavailable
+cd frontend && npm install && npm run build && npm test
+cd mobile   && npm install && npm test   # E2E: npm run test:e2e (Maestro)
 ```
-
-Set `VITE_GOOGLE_MAPS_WEB_API_KEY` in `frontend/.env.local`. The dev server expects a reachable backend API; the easiest option is to keep the Docker backend/nginx stack running.
-
-## Backend Outside Docker
-
-The recommended local path is Docker Compose. If you need to run only the backend:
-
-1. Start or provide a PostgreSQL/PostGIS database.
-2. Copy `deploy/.env.example` to `.env` at the repository root and fill local values.
-3. Run the server:
-
-```bash
-cd backend
-go run ./cmd/server
-```
-
-By default, the backend listens on `http://localhost:8080`. For full-stack work, prefer NGINX through Docker Compose so the public local API path remains `http://localhost/api`.
-
-## API Documentation
-
-Swagger UI is served from the OpenAPI specs in [`docs/openapi/`](docs/openapi/).
-
-- Local Swagger UI: [http://localhost/api/docs/](http://localhost/api/docs/)
-- Live Swagger UI: [https://socialeventmapper.com/api/docs/](https://socialeventmapper.com/api/docs/)
-- Raw specs in the deployed environment: `https://socialeventmapper.com/api/docs/openapi/<spec>.yaml`
-
-The API includes domain specs for auth, events, tickets, profiles, notifications, badges, categories, favorite locations, and admin moderation.
-
-## Running Checks
-
-Backend:
-
-```bash
-cd backend
-./shipcheck.sh
-```
-
-Set `SKIP_INTEGRATION=1` only when Docker is unavailable:
-
-```bash
-SKIP_INTEGRATION=1 ./shipcheck.sh
-```
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run build
-npm test
-```
-
-Mobile:
-
-```bash
-cd mobile
-npm install
-npm test
-```
-
-Mobile E2E scenarios use Maestro:
-
-```bash
-cd mobile
-npm run test:e2e
-```
-
-## Deployment Notes
-
-The local stack is defined in [`deploy/docker-compose.local.yml`](deploy/docker-compose.local.yml). Remote deployment is being redesigned and is not yet defined in this repository. See [`docs/deploy.md`](docs/deploy.md) for local stack details.
-
-## Releases and APKs
-
-The Android release APK is built by [`mobile-apk.yml`](.github/workflows/mobile-apk.yml). Release runs attach the APK to the GitHub Release page.
-
-For local APK build details, see [`mobile/README.md`](mobile/README.md).
 
 ## Further Reading
 
-- [Deployment guide](docs/deploy.md)
-- [Repository conventions](docs/conventions.md)
-- [Backend architecture](docs/backend/architecture.md)
-- [Backend business flows](docs/backend/business-flows/)
+- [Backend architecture](docs/backend/architecture.md) · [Business flows](docs/backend/business-flows/)
 - [Database guide](docs/db/database.md)
-- [OpenAPI specs](docs/openapi/)
+- [Local stack & configuration](docs/deploy.md)
+- [GCP operations](docs/gcp-operations.md)
+- [Conventions](docs/conventions.md)

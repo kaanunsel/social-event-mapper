@@ -9,70 +9,72 @@ A platform for discovering, creating, joining, and checking in to social events 
 
 The production stack runs on **Google Cloud** (`europe-north2`). All infrastructure is defined with Terraform in [`infra/terraform/`](infra/terraform/), and Kubernetes manifests live in [`deploy/kubernetes/`](deploy/kubernetes/).
 
+### Request flow
+
 ```mermaid
-flowchart LR
+flowchart TD
     users(["Web & Mobile Users"])
-    gh["GitHub Actions"]
+    lb["HTTPS Load Balancer<br/>GKE Gateway + managed SSL"]
 
-    subgraph gcp["Google Cloud (europe-north2)"]
-        lb["Gateway / HTTPS Load Balancer<br/>managed SSL"]
-
-        subgraph vpc["VPC (private, Cloud NAT)"]
-            subgraph gke["GKE cluster: sem-gke"]
-                web["sem-web<br/>React + NGINX (HPA)"]
-                api["sem-api<br/>Go / Fiber (HPA)"]
-                otel["OTel Collector"]
-                grafana["Grafana"]
-                ctrl["Test Controller"]
-            end
-            db[("PostgreSQL 16 + PostGIS<br/>Compute Engine VM")]
-            locust["Locust VMs<br/>(on demand)"]
-        end
-
-        sched["Cloud Scheduler"]
-        worker["Cloud Run<br/>sem-worker"]
-        gcs[("Cloud Storage<br/>media + test results")]
-        secrets["Secret Manager"]
-        ar["Artifact Registry"]
-        ops["Cloud Monitoring<br/>& Logging"]
+    subgraph gke["GKE Cluster (autoscaling)"]
+        direction LR
+        web["Web App<br/>React + NGINX"]
+        api["API<br/>Go / Fiber"]
+        grafana["Grafana"]
+        ctrl["Load-Test<br/>Controller"]
     end
 
+    subgraph data["Data Layer (private VPC)"]
+        direction LR
+        db[("PostgreSQL + PostGIS<br/>Compute Engine VM")]
+        gcs[("Cloud Storage<br/>images, test results")]
+    end
+
+    subgraph jobs["Background Jobs"]
+        direction LR
+        sched["Cloud Scheduler"] --> worker["Cloud Run Worker"]
+    end
+
+    ops["Cloud Monitoring & Logging"]
+    locust["Locust VMs<br/>(on demand)"]
+
     users --> lb
-    lb -- "/" --> web
-    lb -- "/api" --> api
-    lb -- "monitoring.*" --> grafana
-    lb -- "tests.*" --> ctrl
+    lb -->|"/"| web
+    lb -->|"/api"| api
+    lb -->|"monitoring."| grafana
+    lb -->|"tests."| ctrl
 
     api --> db
     api --> gcs
-    sched -- "lifecycle (1 min)<br/>cleanup (daily)" --> worker
     worker --> db
 
-    api --> otel --> ops
-    grafana --> ops
-    ctrl --> locust
-    locust --> lb
-    locust --> gcs
+    api -.->|"OpenTelemetry"| ops
+    grafana -.->|"dashboards"| ops
+    ctrl -.->|"starts"| locust
+```
 
-    gh -- "Workload Identity" --> ar
-    ar --> gke
-    ar --> worker
-    secrets -.-> api
-    secrets -.-> worker
+### Deployment flow
+
+```mermaid
+flowchart LR
+    tag(["git tag v*"]) --> gha["GitHub Actions"]
+    gha -->|"Workload Identity"| ar["Artifact Registry"]
+    ar --> migrate["DB Migration Job"]
+    migrate -->|"on success"| rollout["Rolling update<br/>GKE + Cloud Run"]
 ```
 
 | Component | Role |
 |---|---|
-| **Gateway API + Load Balancer** | Single HTTPS entry point. Routes `/` to the web app, `/api` to the API, plus `monitoring.` and `tests.` subdomains. |
-| **GKE (`sem-gke`)** | Runs the web app, API, Grafana, OTel Collector, and load-test controller. API and web scale with HPA; nodes scale with Cluster Autoscaler. |
-| **Database VM** | PostgreSQL 16 + PostGIS on a private Compute Engine VM. Reachable only inside the VPC. |
-| **Cloud Run + Cloud Scheduler** | `sem-worker` runs background jobs: event lifecycle updates every minute and notification cleanup every night. |
+| **HTTPS Load Balancer** | Single entry point (GKE Gateway API). Routes `/` to the web app, `/api` to the API, and the `monitoring.` / `tests.` subdomains to Grafana and the test controller. |
+| **GKE cluster** | Runs the web app, API, Grafana, OTel Collector, and test controller. Pods scale with HPA; nodes scale with Cluster Autoscaler. |
+| **Database VM** | PostgreSQL 16 + PostGIS on a private Compute Engine VM, reachable only inside the VPC. |
 | **Cloud Storage** | Event/profile images and load-test results. |
-| **Secret Manager** | DB password, JWT secret, and API keys. |
-| **Observability** | OpenTelemetry → Cloud Monitoring/Logging, visualized in Grafana. |
-| **Load testing** | Test controller starts temporary Locust VMs and stores results in GCS. |
+| **Background jobs** | Cloud Scheduler calls the Cloud Run worker: event lifecycle updates every minute, notification cleanup every night. |
+| **Observability** | The API sends telemetry through an OTel Collector to Cloud Monitoring/Logging; Grafana visualizes it. |
+| **Load testing** | The controller starts temporary Locust VMs that send traffic to the public endpoint and save results to Cloud Storage. |
+| **Secret Manager** | Stores the DB password, JWT secret, and API keys. |
 
-**Deployments:** pushing a `v*` tag triggers [`deploy-release.yml`](.github/workflows/deploy-release.yml). It builds images, pushes them to Artifact Registry, runs DB migrations, and then does a rolling update. If migrations fail, nothing is deployed. See [`docs/gcp-operations.md`](docs/gcp-operations.md) for pause/resume and secret access.
+**Deployments:** a `v*` tag triggers [`deploy-release.yml`](.github/workflows/deploy-release.yml). It builds images, pushes them to Artifact Registry, runs DB migrations, and then does a rolling update. If migrations fail, nothing is deployed. See [`docs/gcp-operations.md`](docs/gcp-operations.md) for pause/resume and secret access.
 
 ## Tech Stack
 

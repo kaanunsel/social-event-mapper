@@ -26,3 +26,10 @@ deploy/docker-compose.override.yml
 # TLS certificates and keys (never commit)
 /certs/*.pem
 /certs/*.key
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
